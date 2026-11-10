@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<report-database>
+ <description>demo m1 rules</description>
+ <original-file/>
+ <generator>drc: script='m1.drc'</generator>
+ <top-cell>TOP</top-cell>
+ <tags>
+ </tags>
+ <categories>
+  <category>
+   <name>m1.1</name>
+   <description>met1 width &lt; 0.14um</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>m1.2</name>
+   <description>met1 spacing &lt; 0.14um</description>
+   <categories>
+   </categories>
+  </category>
+ </categories>
+ <cells>
+  <cell>
+   <name>TOP</name>
+   <variant/>
+   <references>
+   </references>
+  </cell>
+ </cells>
+ <items>
+  <item>
+   <tags/>
+   <category>'m1.1'</category>
+   <cell>TOP</cell>
+   <visited>false</visited>
+   <multiplicity>1</multiplicity>
+   <image/>
+   <values>
+    <value>edge-pair: (2,0;2,1)|(2.1,1;2.1,0)</value>
+   </values>
+  </item>
+  <item>
+   <tags/>
+   <category>'m1.2'</category>
+   <cell>TOP</cell>
+   <visited>false</visited>
+   <multiplicity>1</multiplicity>
+   <image/>
+   <values>
+    <value>edge-pair: (0,0.2;1,0.2)|(1,0.25;0,0.25)</value>
+   </values>
+  </item>
+ </items>
+</report-database>

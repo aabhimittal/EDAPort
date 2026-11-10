@@ -1,0 +1,14 @@
+{
+ "errors": [],
+ "warnings": [
+  {
+   "code": "UNUSEDSIGNAL",
+   "file": "rtl/counter.v",
+   "line": 9,
+   "msg": "Signal is not used: 'dbg'"
+  }
+ ],
+ "warnings_grouped": {
+  "UNUSEDSIGNAL": 1
+ }
+}

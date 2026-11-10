@@ -1,0 +1,5 @@
+* extracted inverter (layout side)
+.subckt inv A Y VDD VSS
+M1 Y A VDD VDD pmos W=1u L=0.15u
+M2 Y VDD VSS VSS nmos W=0.5u L=0.15u
+.ends

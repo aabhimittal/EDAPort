@@ -1,0 +1,12 @@
+{
+ "errors": [
+  {
+   "code": null,
+   "file": "w.v",
+   "line": 5,
+   "msg": "Unknown module type: undefined_mod"
+  }
+ ],
+ "warnings": [],
+ "warnings_grouped": {}
+}

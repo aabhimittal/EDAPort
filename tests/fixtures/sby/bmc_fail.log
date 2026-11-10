@@ -1,0 +1,52 @@
+SBY 18:09:29 [counter] Removing directory 'f/counter'.
+SBY 18:09:29 [counter] Copy 'f/counter.v' to 'f/counter/src/counter.v'.
+SBY 18:09:29 [counter] engine_0: smtbmc z3
+SBY 18:09:29 [counter] base: starting process "cd counter/src; yosys -ql ../model/design.log ../model/design.ys"
+SBY 18:09:29 [counter] base: finished (returncode=0)
+SBY 18:09:29 [counter] prep: starting process "cd counter/model; yosys -ql design_prep.log design_prep.ys"
+SBY 18:09:29 [counter] prep: finished (returncode=0)
+SBY 18:09:29 [counter] smt2: starting process "cd counter/model; yosys -ql design_smt2.log design_smt2.ys"
+SBY 18:09:29 [counter] smt2: finished (returncode=0)
+SBY 18:09:29 [counter] engine_0: starting process "cd counter; yosys-smtbmc -s z3 --presat --noprogress -t 20  --append 0 --dump-vcd engine_0/trace.vcd --dump-yw engine_0/trace.yw --dump-vlogtb engine_0/trace_tb.v --dump-smtc engine_0/trace.smtc model/design_smt2.smt2"
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Solver: z3
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 0..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 0..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 1..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 1..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 2..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 2..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 3..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 3..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 4..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 4..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 5..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 5..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 6..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 6..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 7..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 7..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 8..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 8..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 9..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 9..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 10..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 10..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 11..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 11..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assumptions in step 12..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Checking assertions in step 12..
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  BMC failed!
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Assert failed in counter: counter.v:22.57-22.79 ($assert$counter.v:22$27)
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace.vcd
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace_tb.v
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace.smtc
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace.yw
+SBY 18:09:29 [counter] engine_0: ##   0:00:00  Status: failed
+SBY 18:09:29 [counter] engine_0: finished (returncode=1)
+SBY 18:09:29 [counter] engine_0: Status returned by engine: FAIL
+SBY 18:09:29 [counter] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:00 (0)
+SBY 18:09:29 [counter] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:00 (0)
+SBY 18:09:29 [counter] summary: engine_0 (smtbmc z3) returned FAIL
+SBY 18:09:29 [counter] summary: counterexample trace: counter/engine_0/trace.vcd
+SBY 18:09:29 [counter] summary:   failed assertion counter.$assert$counter.v:22$27 at counter.v:22.57-22.79 in step 12
+SBY 18:09:29 [counter] DONE (FAIL, rc=2)

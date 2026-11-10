@@ -1,0 +1,4 @@
+VCD info: dumpfile sim.vcd opened for output.
+TEST range FAIL @116 count=10 exceeds MAX=9
+TEST reset PASS @226
+tb/tb_counter.sv:31: $finish called at 226000 (1ps)

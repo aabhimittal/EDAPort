@@ -1,0 +1,493 @@
+
+ /----------------------------------------------------------------------------\
+ |                                                                            |
+ |  yosys -- Yosys Open SYnthesis Suite                                       |
+ |                                                                            |
+ |  Copyright (C) 2012 - 2020  Claire Xenia Wolf <claire@yosyshq.com>         |
+ |                                                                            |
+ |  Permission to use, copy, modify, and/or distribute this software for any  |
+ |  purpose with or without fee is hereby granted, provided that the above    |
+ |  copyright notice and this permission notice appear in all copies.         |
+ |                                                                            |
+ |  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES  |
+ |  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF          |
+ |  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR   |
+ |  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES    |
+ |  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN     |
+ |  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   |
+ |  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            |
+ |                                                                            |
+ \----------------------------------------------------------------------------/
+
+ Yosys 0.33 (git sha1 2584903a060)
+
+
+-- Executing script file `e.ys' --
+
+1. Executing Verilog-2005 frontend: rtl/counter.v
+Parsing SystemVerilog input from `rtl/counter.v' to AST representation.
+Generating RTLIL representation for module `\counter'.
+Successfully finished Verilog frontend.
+
+2. Executing PREP pass.
+
+2.1. Executing HIERARCHY pass (managing design hierarchy).
+
+2.1.1. Analyzing design hierarchy..
+Top module:  \counter
+
+2.1.2. Analyzing design hierarchy..
+Top module:  \counter
+Removed 0 unused modules.
+
+2.2. Executing PROC pass (convert processes to netlists).
+
+2.2.1. Executing PROC_CLEAN pass (remove empty switches from decision trees).
+Cleaned up 0 empty switches.
+
+2.2.2. Executing PROC_RMDEAD pass (remove dead branches from decision trees).
+Marked 1 switch rules as full_case in process $proc$rtl/counter.v:11$4 in module counter.
+Removed a total of 0 dead cases.
+
+2.2.3. Executing PROC_PRUNE pass (remove redundant assignments in processes).
+Removed 0 redundant assignments.
+Promoted 0 assignments to connections.
+
+2.2.4. Executing PROC_INIT pass (extract init attributes).
+
+2.2.5. Executing PROC_ARST pass (detect async resets in processes).
+
+2.2.6. Executing PROC_ROM pass (convert switches to ROMs).
+Converted 0 switches.
+<suppressed ~2 debug messages>
+
+2.2.7. Executing PROC_MUX pass (convert decision trees to multiplexers).
+Creating decoders for process `\counter.$proc$rtl/counter.v:11$4'.
+     1/1: $0\count[7:0]
+
+2.2.8. Executing PROC_DLATCH pass (convert process syncs to latches).
+
+2.2.9. Executing PROC_DFF pass (convert process syncs to FFs).
+Creating register for signal `\counter.\count' using process `\counter.$proc$rtl/counter.v:11$4'.
+  created $dff cell `$procdff$13' with positive edge clock.
+
+2.2.10. Executing PROC_MEMWR pass (convert process memory writes to cells).
+
+2.2.11. Executing PROC_CLEAN pass (remove empty switches from decision trees).
+Found and cleaned up 2 empty switches in `\counter.$proc$rtl/counter.v:11$4'.
+Removing empty process `counter.$proc$rtl/counter.v:11$4'.
+Cleaned up 2 empty switches.
+
+2.2.12. Executing OPT_EXPR pass (perform const folding).
+Optimizing module counter.
+<suppressed ~1 debug messages>
+
+2.3. Executing OPT_EXPR pass (perform const folding).
+Optimizing module counter.
+
+2.4. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \counter..
+Removed 0 unused cells and 5 unused wires.
+<suppressed ~1 debug messages>
+
+2.5. Executing CHECK pass (checking for obvious problems).
+Checking module counter...
+Found and reported 0 problems.
+
+2.6. Executing OPT pass (performing simple optimizations).
+
+2.6.1. Executing OPT_EXPR pass (perform const folding).
+Optimizing module counter.
+
+2.6.2. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\counter'.
+Removed a total of 0 cells.
+
+2.6.3. Executing OPT_MUXTREE pass (detect dead branches in mux trees).
+Running muxtree optimizer on module \counter..
+  Creating internal representation of mux trees.
+  Evaluating internal representation of mux trees.
+  Analyzing evaluation results.
+Removed 0 multiplexer ports.
+<suppressed ~1 debug messages>
+
+2.6.4. Executing OPT_REDUCE pass (consolidate $*mux and $reduce_* inputs).
+  Optimizing cells in module \counter.
+Performed a total of 0 changes.
+
+2.6.5. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\counter'.
+Removed a total of 0 cells.
+
+2.6.6. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \counter..
+
+2.6.7. Executing OPT_EXPR pass (perform const folding).
+Optimizing module counter.
+
+2.6.8. Finished OPT passes. (There is nothing left to do.)
+
+2.7. Executing WREDUCE pass (reducing word size of cells).
+Removed top 4 bits (of 8) from port B of cell counter.$eq$rtl/counter.v:10$2 ($eq).
+Removed top 28 bits (of 32) from port B of cell counter.$gt$rtl/counter.v:15$5 ($gt).
+Removed top 30 bits (of 32) from port B of cell counter.$add$rtl/counter.v:15$6 ($add).
+Removed top 23 bits (of 32) from port Y of cell counter.$add$rtl/counter.v:15$6 ($add).
+Removed top 24 bits (of 32) from mux cell counter.$ternary$rtl/counter.v:15$7 ($mux).
+Removed top 1 bits (of 9) from port Y of cell counter.$add$rtl/counter.v:15$6 ($add).
+Removed top 24 bits (of 32) from wire counter.$add$rtl/counter.v:15$6_Y.
+
+2.8. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \counter..
+Removed 0 unused cells and 1 unused wires.
+<suppressed ~1 debug messages>
+
+2.9. Executing MEMORY_COLLECT pass (generating $mem cells).
+
+2.10. Executing OPT pass (performing simple optimizations).
+
+2.10.1. Executing OPT_EXPR pass (perform const folding).
+Optimizing module counter.
+
+2.10.2. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\counter'.
+Removed a total of 0 cells.
+
+2.10.3. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \counter..
+
+2.10.4. Finished fast OPT passes.
+
+2.11. Printing statistics.
+
+=== counter ===
+
+   Number of wires:                 12
+   Number of wire bits:             78
+   Number of public wires:           6
+   Number of public wire bits:      20
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                  8
+     $add                            1
+     $dff                            1
+     $eq                             1
+     $gt                             1
+     $logic_and                      1
+     $mux                            3
+
+2.12. Executing CHECK pass (checking for obvious problems).
+Checking module counter...
+Found and reported 0 problems.
+
+3. Executing Liberty frontend: lib/demo.lib
+Imported 8 cell types from liberty file.
+
+4. Executing Verilog-2005 frontend: netlist.v
+Parsing Verilog input from `netlist.v' to AST representation.
+Generating RTLIL representation for module `\counter'.
+Successfully finished Verilog frontend.
+
+5. Executing HIERARCHY pass (managing design hierarchy).
+
+5.1. Analyzing design hierarchy..
+Top module:  \counter
+Used module:     \DFF
+Used module:     \AND2
+Used module:     \NOR2
+Used module:     \NAND2
+Used module:     \INV
+
+5.2. Analyzing design hierarchy..
+Top module:  \counter
+Used module:     \DFF
+Used module:     \AND2
+Used module:     \NOR2
+Used module:     \NAND2
+Used module:     \INV
+Removing unused module `\XOR2'.
+Removing unused module `\OR2'.
+Removing unused module `\BUF'.
+Removed 3 unused modules.
+
+6. Executing FLATTEN pass (flatten design).
+Deleting now unused module DFF.
+Deleting now unused module AND2.
+Deleting now unused module NOR2.
+Deleting now unused module NAND2.
+Deleting now unused module INV.
+<suppressed ~47 debug messages>
+
+7. Executing PREP pass.
+
+7.1. Executing HIERARCHY pass (managing design hierarchy).
+
+7.1.1. Analyzing design hierarchy..
+Top module:  \counter
+
+7.1.2. Analyzing design hierarchy..
+Top module:  \counter
+Removed 0 unused modules.
+
+7.2. Executing PROC pass (convert processes to netlists).
+
+7.2.1. Executing PROC_CLEAN pass (remove empty switches from decision trees).
+Cleaned up 0 empty switches.
+
+7.2.2. Executing PROC_RMDEAD pass (remove dead branches from decision trees).
+Removed a total of 0 dead cases.
+
+7.2.3. Executing PROC_PRUNE pass (remove redundant assignments in processes).
+Removed 0 redundant assignments.
+Promoted 0 assignments to connections.
+
+7.2.4. Executing PROC_INIT pass (extract init attributes).
+
+7.2.5. Executing PROC_ARST pass (detect async resets in processes).
+
+7.2.6. Executing PROC_ROM pass (convert switches to ROMs).
+Converted 0 switches.
+
+7.2.7. Executing PROC_MUX pass (convert decision trees to multiplexers).
+
+7.2.8. Executing PROC_DLATCH pass (convert process syncs to latches).
+
+7.2.9. Executing PROC_DFF pass (convert process syncs to FFs).
+
+7.2.10. Executing PROC_MEMWR pass (convert process memory writes to cells).
+
+7.2.11. Executing PROC_CLEAN pass (remove empty switches from decision trees).
+Cleaned up 0 empty switches.
+
+7.2.12. Executing OPT_EXPR pass (perform const folding).
+Optimizing module counter.
+
+7.3. Executing OPT_EXPR pass (perform const folding).
+Optimizing module counter.
+
+7.4. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \counter..
+Removed 8 unused cells and 85 unused wires.
+<suppressed ~17 debug messages>
+
+7.5. Executing CHECK pass (checking for obvious problems).
+Checking module counter...
+Found and reported 0 problems.
+
+7.6. Executing OPT pass (performing simple optimizations).
+
+7.6.1. Executing OPT_EXPR pass (perform const folding).
+Optimizing module counter.
+
+7.6.2. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\counter'.
+<suppressed ~3 debug messages>
+Removed a total of 1 cells.
+
+7.6.3. Executing OPT_MUXTREE pass (detect dead branches in mux trees).
+Running muxtree optimizer on module \counter..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Removed 0 multiplexer ports.
+
+7.6.4. Executing OPT_REDUCE pass (consolidate $*mux and $reduce_* inputs).
+  Optimizing cells in module \counter.
+Performed a total of 0 changes.
+
+7.6.5. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\counter'.
+Removed a total of 0 cells.
+
+7.6.6. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \counter..
+Removed 0 unused cells and 1 unused wires.
+<suppressed ~1 debug messages>
+
+7.6.7. Executing OPT_EXPR pass (perform const folding).
+Optimizing module counter.
+
+7.6.8. Rerunning OPT passes. (Maybe there is more to do..)
+
+7.6.9. Executing OPT_MUXTREE pass (detect dead branches in mux trees).
+Running muxtree optimizer on module \counter..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Removed 0 multiplexer ports.
+
+7.6.10. Executing OPT_REDUCE pass (consolidate $*mux and $reduce_* inputs).
+  Optimizing cells in module \counter.
+Performed a total of 0 changes.
+
+7.6.11. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\counter'.
+Removed a total of 0 cells.
+
+7.6.12. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \counter..
+
+7.6.13. Executing OPT_EXPR pass (perform const folding).
+Optimizing module counter.
+
+7.6.14. Finished OPT passes. (There is nothing left to do.)
+
+7.7. Executing WREDUCE pass (reducing word size of cells).
+
+7.8. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \counter..
+
+7.9. Executing MEMORY_COLLECT pass (generating $mem cells).
+
+7.10. Executing OPT pass (performing simple optimizations).
+
+7.10.1. Executing OPT_EXPR pass (perform const folding).
+Optimizing module counter.
+
+7.10.2. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\counter'.
+Removed a total of 0 cells.
+
+7.10.3. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \counter..
+
+7.10.4. Finished fast OPT passes.
+
+7.11. Printing statistics.
+
+=== counter ===
+
+   Number of wires:                177
+   Number of wire bits:            191
+   Number of public wires:         153
+   Number of public wire bits:     167
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                 71
+     $_AND_                         21
+     $_DFF_P_                        8
+     $_NOT_                         27
+     $_OR_                          15
+
+7.12. Executing CHECK pass (checking for obvious problems).
+Checking module counter...
+Found and reported 0 problems.
+
+8. Executing EQUIV_MAKE pass (creating equiv checking module).
+Presumably equivalent wires: clk_gold (\clk_gold), clk_gate (\clk_gate) -> clk
+Presumably equivalent wires: count_gold (\count_gold), count_gate ({ \_84_.IQ_gate \_83_.IQ_gate \_82_.IQ_gate \_81_.IQ_gate \_80_.IQ_gate \_79_.IQ_gate \_78_.IQ_gate \_77_.IQ_gate }) -> count
+Presumably equivalent wires: dbg_gold (\count_gold), dbg_gate ({ \_84_.IQ_gate \_83_.IQ_gate \_82_.IQ_gate \_81_.IQ_gate \_80_.IQ_gate \_79_.IQ_gate \_78_.IQ_gate \_77_.IQ_gate }) -> dbg
+Presumably equivalent wires: en_gold (\en_gold), en_gate (\en_gate) -> en
+Presumably equivalent wires: rst_gold (\rst_gold), rst_gate (\rst_gate) -> rst
+Presumably equivalent wires: wrap_gold (\wrap_gold), wrap_gate (\wrap_gate) -> wrap
+Changing input A of cell $flatten\_39_.$auto$liberty.cc:58:create_inv_cell$15_gate ($_NOT_): \_77_.IQ_gate -> \count [0]
+Changing input A of cell $flatten\_40_.$auto$liberty.cc:84:create_or_cell$21_gate ($_OR_): \_84_.IQ_gate -> \count [7]
+Changing input B of cell $flatten\_40_.$auto$liberty.cc:84:create_or_cell$21_gate ($_OR_): \_83_.IQ_gate -> \count [6]
+Changing input A of cell $flatten\_41_.$auto$liberty.cc:84:create_or_cell$21_gate ($_OR_): \_82_.IQ_gate -> \count [5]
+Changing input B of cell $flatten\_41_.$auto$liberty.cc:84:create_or_cell$21_gate ($_OR_): \_81_.IQ_gate -> \count [4]
+Changing input B of cell $flatten\_43_.$auto$liberty.cc:75:create_and_cell$25_gate ($_AND_): \_77_.IQ_gate -> \count [0]
+Changing input A of cell $flatten\_44_.$auto$liberty.cc:84:create_or_cell$21_gate ($_OR_): \_79_.IQ_gate -> \count [2]
+Changing input B of cell $flatten\_44_.$auto$liberty.cc:84:create_or_cell$21_gate ($_OR_): \_78_.IQ_gate -> \count [1]
+Changing input A of cell $flatten\_45_.$auto$liberty.cc:75:create_and_cell$25_gate ($_AND_): \_80_.IQ_gate -> \count [3]
+Changing input A of cell $flatten\_54_.$auto$liberty.cc:75:create_and_cell$25_gate ($_AND_): \_78_.IQ_gate -> \count [1]
+Changing input B of cell $flatten\_54_.$auto$liberty.cc:75:create_and_cell$25_gate ($_AND_): \_77_.IQ_gate -> \count [0]
+Changing input A of cell $flatten\_58_.$auto$liberty.cc:84:create_or_cell$21_gate ($_OR_): \_78_.IQ_gate -> \count [1]
+Changing input A of cell $flatten\_61_.$auto$liberty.cc:75:create_and_cell$17_gate ($_AND_): \_79_.IQ_gate -> \count [2]
+Changing input A of cell $flatten\_65_.$auto$liberty.cc:84:create_or_cell$21_gate ($_OR_): \_79_.IQ_gate -> \count [2]
+Changing input A of cell $flatten\_68_.$auto$liberty.cc:75:create_and_cell$25_gate ($_AND_): \_80_.IQ_gate -> \count [3]
+Changing input A of cell $flatten\_73_.$auto$liberty.cc:75:create_and_cell$25_gate ($_AND_): \_81_.IQ_gate -> \count [4]
+Changing input A of cell $flatten\_74_.$auto$liberty.cc:75:create_and_cell$25_gate ($_AND_): \_82_.IQ_gate -> \count [5]
+Changing input A of cell $flatten\_75_.$auto$liberty.cc:75:create_and_cell$25_gate ($_AND_): \_83_.IQ_gate -> \count [6]
+Changing input A of cell $flatten\_76_.$auto$liberty.cc:75:create_and_cell$25_gate ($_AND_): \_84_.IQ_gate -> \count [7]
+Changing input A of cell $flatten\_38_.$auto$liberty.cc:58:create_inv_cell$15_gate ($_NOT_): \_80_.IQ_gate -> \count [3]
+Changing input A of cell $eq$rtl/counter.v:10$2_gold ($eq): \count_gold -> \count
+Changing input A of cell $gt$rtl/counter.v:15$5_gold ($gt): \count_gold -> \count
+Changing input A of cell $procmux$8_gold ($mux): \count_gold -> \count
+Changing input A of cell $add$rtl/counter.v:15$6_gold ($add): \count_gold -> \count
+
+9. Executing HIERARCHY pass (managing design hierarchy).
+
+9.1. Analyzing design hierarchy..
+Top module:  \equiv
+
+9.2. Analyzing design hierarchy..
+Top module:  \equiv
+Removing unused module `\gate'.
+Removing unused module `\gold'.
+Removed 2 unused modules.
+
+10. Executing ASYNC2SYNC pass.
+
+11. Executing EQUIV_SIMPLE pass.
+Found 17 unproven $equiv cells (3 groups) in equiv:
+ Grouping SAT models for \count:
+  Trying to prove $equiv for \count [0]: failed.
+  Trying to prove $equiv for \count [1]: failed.
+  Trying to prove $equiv for \count [2]: failed.
+  Trying to prove $equiv for \count [3]: failed.
+  Trying to prove $equiv for \count [4]: failed.
+  Trying to prove $equiv for \count [5]: failed.
+  Trying to prove $equiv for \count [6]: failed.
+  Trying to prove $equiv for \count [7]: failed.
+  Trying to prove $equiv for \wrap: success!
+ Grouping SAT models for \dbg:
+  Trying to prove $equiv for \dbg [0]: failed.
+  Trying to prove $equiv for \dbg [1]: failed.
+  Trying to prove $equiv for \dbg [2]: failed.
+  Trying to prove $equiv for \dbg [3]: failed.
+  Trying to prove $equiv for \dbg [4]: failed.
+  Trying to prove $equiv for \dbg [5]: failed.
+  Trying to prove $equiv for \dbg [6]: failed.
+  Trying to prove $equiv for \dbg [7]: failed.
+Proved 1 previously unproven $equiv cells.
+
+12. Executing EQUIV_INDUCT pass.
+Found 16 unproven $equiv cells in module equiv:
+  Proving existence of base case for step 1. (1811 clauses over 695 variables)
+  Proving induction step 1. (3781 clauses over 1437 variables)
+  Proof for induction step failed. Extending to next time step.
+  Proving existence of base case for step 2. (3782 clauses over 1437 variables)
+  Proving induction step 2. (5752 clauses over 2179 variables)
+  Proof for induction step failed. Extending to next time step.
+  Proving existence of base case for step 3. (5753 clauses over 2179 variables)
+  Proving induction step 3. (7723 clauses over 2921 variables)
+  Proof for induction step failed. Extending to next time step.
+  Proving existence of base case for step 4. (7724 clauses over 2921 variables)
+  Proving induction step 4. (9694 clauses over 3663 variables)
+  Proof for induction step failed. Extending to next time step.
+  Proving existence of base case for step 5. (9695 clauses over 3663 variables)
+  Proving induction step 5. (11665 clauses over 4405 variables)
+  Proof for induction step failed. Trying to prove individual $equiv from workset.
+  Trying to prove $equiv for \count [4]: success!
+  Trying to prove $equiv for \count [7]: success!
+  Trying to prove $equiv for \count [5]: success!
+  Trying to prove $equiv for \count [2]: failed.
+  Trying to prove $equiv for \count [6]: success!
+  Trying to prove $equiv for \count [3]: failed.
+  Trying to prove $equiv for \dbg [2]: failed.
+  Trying to prove $equiv for \dbg [3]: failed.
+  Trying to prove $equiv for \count [1]: failed.
+  Trying to prove $equiv for \count [0]: failed.
+  Trying to prove $equiv for \dbg [1]: failed.
+  Trying to prove $equiv for \dbg [0]: failed.
+  Trying to prove $equiv for \dbg [4]: success!
+  Trying to prove $equiv for \dbg [5]: success!
+  Trying to prove $equiv for \dbg [6]: success!
+  Trying to prove $equiv for \dbg [7]: success!
+Proved 8 previously unproven $equiv cells.
+
+13. Executing EQUIV_STATUS pass.
+Found 17 $equiv cells in equiv:
+  Of those cells 9 are proven and 8 are unproven.
+  Unproven $equiv $auto$equiv_make.cc:294:find_same_wires$44: \dbg_gold [3] \dbg_gate [3]
+  Unproven $equiv $auto$equiv_make.cc:294:find_same_wires$43: \dbg_gold [2] \dbg_gate [2]
+  Unproven $equiv $auto$equiv_make.cc:294:find_same_wires$42: \dbg_gold [1] \dbg_gate [1]
+  Unproven $equiv $auto$equiv_make.cc:294:find_same_wires$41: \dbg_gold [0] \dbg_gate [0]
+  Unproven $equiv $auto$equiv_make.cc:257:find_same_wires$36: \count_gold [3] \count_gate [3]
+  Unproven $equiv $auto$equiv_make.cc:257:find_same_wires$35: \count_gold [2] \count_gate [2]
+  Unproven $equiv $auto$equiv_make.cc:257:find_same_wires$34: \count_gold [1] \count_gate [1]
+  Unproven $equiv $auto$equiv_make.cc:257:find_same_wires$33: \count_gold [0] \count_gate [0]
+Found a total of 8 unproven $equiv cells.
+
+End of script. Logfile hash: b6dc012caa, CPU: user 0.05s system 0.00s, MEM: 14.07 MB peak
+Yosys 0.33 (git sha1 2584903a060)
+Time spent: 42% 1x equiv_induct (0 sec), 14% 9x opt_clean (0 sec), ...

@@ -1,0 +1,22 @@
+{
+ "first_failure": {
+  "msg": "count=10 exceeds MAX=9",
+  "test": "range",
+  "time_ns": 116.0
+ },
+ "status": "fail",
+ "tests": [
+  {
+   "msg": "count=10 exceeds MAX=9",
+   "name": "range",
+   "status": "fail",
+   "time_ns": 116.0
+  },
+  {
+   "msg": "",
+   "name": "reset",
+   "status": "pass",
+   "time_ns": 226.0
+  }
+ ]
+}

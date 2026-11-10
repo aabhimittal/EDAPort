@@ -1,0 +1,14 @@
+{
+  "orfs": {
+    "image": "openroad/orfs@sha256:23d3b0934247bb94eca138ba4c3e4542ef7c5c0b557b8b863dc930c875622fef",
+    "provides": ["openroad", "opensta", "yosys", "klayout"],
+    "used_by": ["flow_run_stage", "sta_report_paths"]
+  },
+  "oss-tools": {
+    "image": "ghcr.io/aabhimittal/edaport-oss-tools@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "dockerfile": "images/oss-tools/Dockerfile",
+    "provides": ["yosys 0.33", "iverilog 12.0", "verilator 5.020", "sby 0.33 + z3", "klayout 0.28.16", "netgen 1.5.133"],
+    "used_by": ["lint_run", "synth_run", "sim_run", "formal_run", "equiv_run", "drc_run", "lvs_run"],
+    "note": "placeholder digest until the image is published; EDAPORT_RUNNER=local (default) uses host binaries"
+  }
+}
