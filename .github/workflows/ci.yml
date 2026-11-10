@@ -1,0 +1,19 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: EDA tools (versions match images/oss-tools/Dockerfile)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yosys iverilog verilator z3 klayout netgen-lvs
+          git clone https://github.com/YosysHQ/sby.git /tmp/sby
+          git -C /tmp/sby checkout 85dd50b92a3acf170954a06f20f49e2162ce5273
+          sudo make -C /tmp/sby install PREFIX=/usr/local
+      - run: pip install -e ".[test]"
+      - run: make test-fast
+      - run: make demo

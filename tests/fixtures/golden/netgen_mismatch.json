@@ -1,0 +1,6 @@
+{
+ "match": false,
+ "mismatches": [
+  "inv: net group layout[A(pmos.gate=1,nmos.gate=1); VDD(pmos.source=1,pmos.bulk=1)] vs schematic[A(pmos.gate=1); VDD(pmos.source=1,pmos.bulk=1,nmos.gate=1)]"
+ ]
+}

@@ -1,0 +1,33 @@
+{
+ "errors": [
+  {
+   "code": null,
+   "file": "w.v",
+   "line": 5,
+   "msg": "Cannot find file containing module: 'undefined_mod'"
+  },
+  {
+   "code": null,
+   "file": "w.v",
+   "line": 5,
+   "msg": "This may be because there's no search path specified with -I<dir>."
+  }
+ ],
+ "warnings": [
+  {
+   "code": "WIDTHTRUNC",
+   "file": "w.v",
+   "line": 3,
+   "msg": "Operator ASSIGNDLY expects 3 bits on the Assign RHS, but Assign RHS's ADD generates 32 or 4 bits."
+  },
+  {
+   "code": "WIDTHTRUNC",
+   "file": "w.v",
+   "line": 4,
+   "msg": "Operator ASSIGN expects 3 bits on the Assign RHS, but Assign RHS's VARREF 'a' generates 4 bits."
+  }
+ ],
+ "warnings_grouped": {
+  "WIDTHTRUNC": 2
+ }
+}

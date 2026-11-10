@@ -1,0 +1,16 @@
+{
+ "area_um2": 111.5,
+ "cell_types": {
+  "AND2": 12,
+  "DFF": 8,
+  "INV": 2,
+  "NAND2": 10,
+  "NOR2": 15
+ },
+ "cells": 47,
+ "logic_depth": 6,
+ "warnings_grouped": {
+  "Templates are not defined.": 1,
+  "The network is combinational (run '_' or '_').": 1
+ }
+}

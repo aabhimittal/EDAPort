@@ -1,0 +1,27 @@
+{
+ "metrics": {
+  "cts__clock__skew__hold": 0.00387237,
+  "cts__clock__skew__setup": 0.00387237,
+  "cts__design__core__area": 5885.64,
+  "cts__design__die__area": 6404,
+  "cts__design__instance__area": 4375.45,
+  "cts__design__instance__area__stdcell": 4375.45,
+  "cts__design__instance__count": 521,
+  "cts__design__instance__count__stdcell": 521,
+  "cts__design__instance__utilization": 0.74341,
+  "cts__design__instance__utilization__stdcell": 0.74341,
+  "cts__design__io": 56,
+  "cts__flow__errors__count": 0,
+  "cts__power__total": 0.0052952,
+  "cts__timing__drv__max_cap": 0,
+  "cts__timing__drv__max_fanout": 0,
+  "cts__timing__drv__max_slew": 0,
+  "cts__timing__fmax": 435500000.0,
+  "cts__timing__hold__tns": 0,
+  "cts__timing__hold__ws": 0.420655,
+  "cts__timing__setup__tns": -55.324,
+  "cts__timing__setup__ws": -1.19621
+ },
+ "units": {},
+ "warnings_grouped": {}
+}

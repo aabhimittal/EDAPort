@@ -1,0 +1,5 @@
+source($input)
+report("demo m1 rules", $report)
+m1 = input(68, 20)
+m1.width(0.14).output("m1.1", "met1 width < 0.14um")
+m1.space(0.14).output("m1.2", "met1 spacing < 0.14um")

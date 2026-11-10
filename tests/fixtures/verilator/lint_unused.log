@@ -1,0 +1,7 @@
+%Warning-UNUSEDSIGNAL: rtl/counter.v:9:22: Signal is not used: 'dbg'
+                                         : ... note: In instance 'counter'
+    9 |     wire [WIDTH-1:0] dbg = count ^ 8'h00;
+      |                      ^~~
+                       ... For warning description see https://verilator.org/warn/UNUSEDSIGNAL?v=5.020
+                       ... Use "/* verilator lint_off UNUSEDSIGNAL */" and lint_on around source to disable this message.
+%Error: Exiting due to 1 warning(s)

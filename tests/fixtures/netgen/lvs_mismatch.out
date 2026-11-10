@@ -1,0 +1,24 @@
+
+Subcircuit summary:
+Circuit 1: inv                             |Circuit 2: inv                             
+-------------------------------------------|-------------------------------------------
+pmos (1)                                   |pmos (1)                                   
+nmos (1)                                   |nmos (1)                                   
+Number of devices: 2                       |Number of devices: 2                       
+Number of nets: 4                          |Number of nets: 4                          
+---------------------------------------------------------------------------------------
+NET mismatches: Class fragments follow (with fanout counts):
+Circuit 1: inv                             |Circuit 2: inv                             
+
+---------------------------------------------------------------------------------------
+Net: A                                     |Net: A                                     
+  pmos/gate = 1                            |  pmos/gate = 1                            
+  nmos/gate = 1                            |                                           
+                                           |                                           
+Net: VDD                                   |Net: VDD                                   
+  pmos/source = 1                          |  pmos/source = 1                          
+  pmos/bulk = 1                            |  pmos/bulk = 1                            
+                                           |  nmos/gate = 1                            
+---------------------------------------------------------------------------------------
+Netlists do not match.
+Netlists do not match.

@@ -1,0 +1,15 @@
+{
+ "equivalent": false,
+ "proven": 9,
+ "total": 17,
+ "unproven": [
+  "\\dbg_gold [3] <> \\dbg_gate [3]",
+  "\\dbg_gold [2] <> \\dbg_gate [2]",
+  "\\dbg_gold [1] <> \\dbg_gate [1]",
+  "\\dbg_gold [0] <> \\dbg_gate [0]",
+  "\\count_gold [3] <> \\count_gate [3]",
+  "\\count_gold [2] <> \\count_gate [2]",
+  "\\count_gold [1] <> \\count_gate [1]",
+  "\\count_gold [0] <> \\count_gate [0]"
+ ]
+}

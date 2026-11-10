@@ -1,0 +1,24 @@
+%Warning-WIDTHTRUNC: w.v:3:27: Operator ASSIGNDLY expects 3 bits on the Assign RHS, but Assign RHS's ADD generates 32 or 4 bits.
+                             : ... note: In instance 'w'
+    3 |   always @(posedge clk) y <= a + 1;
+      |                           ^~
+                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.020
+                     ... Use "/* verilator lint_off WIDTHTRUNC */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: w.v:4:27: Operator ASSIGN expects 3 bits on the Assign RHS, but Assign RHS's VARREF 'a' generates 4 bits.
+                             : ... note: In instance 'w'
+    4 |   always @(posedge clk) y = a;
+      |                           ^
+%Error: w.v:5:3: Cannot find file containing module: 'undefined_mod'
+    5 |   undefined_mod u0(.x(a));
+      |   ^~~~~~~~~~~~~
+%Error: w.v:5:3: This may be because there's no search path specified with -I<dir>.
+    5 |   undefined_mod u0(.x(a));
+      |   ^~~~~~~~~~~~~
+        ... Looked in:
+             undefined_mod
+             undefined_mod.v
+             undefined_mod.sv
+             obj_dir/undefined_mod
+             obj_dir/undefined_mod.v
+             obj_dir/undefined_mod.sv
+%Error: Exiting due to 2 error(s), 2 warning(s)

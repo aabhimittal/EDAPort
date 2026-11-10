@@ -1,0 +1,5 @@
+w.v:5: error: Unknown module type: undefined_mod
+2 error(s) during elaboration.
+*** These modules were missing:
+        undefined_mod referenced 1 times.
+***

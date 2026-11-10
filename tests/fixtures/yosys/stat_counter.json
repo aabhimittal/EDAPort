@@ -1,0 +1,43 @@
+{
+   "creator": "Yosys 0.33 (git sha1 2584903a060)",
+   "invocation": "stat -json -liberty lib/demo.lib ",
+   "modules": {
+      "\\counter": {
+         "num_wires":         44,
+         "num_wire_bits":     58,
+         "num_pub_wires":     6,
+         "num_pub_wire_bits": 20,
+         "num_memories":      0,
+         "num_memory_bits":   0,
+         "num_processes":     0,
+         "num_cells":         47,
+         "area":              111.500000,
+         "num_cells_by_type": {
+            "AND2": 12,
+            "DFF": 8,
+            "INV": 2,
+            "NAND2": 10,
+            "NOR2": 15
+         }
+      }
+   },
+      "design": {
+         "num_wires":         44,
+         "num_wire_bits":     58,
+         "num_pub_wires":     6,
+         "num_pub_wire_bits": 20,
+         "num_memories":      0,
+         "num_memory_bits":   0,
+         "num_processes":     0,
+         "num_cells":         47,
+         "area":              111.500000,
+         "num_cells_by_type": {
+            "AND2": 12,
+            "DFF": 8,
+            "INV": 2,
+            "NAND2": 10,
+            "NOR2": 15
+         }
+      }
+}
+

@@ -1,0 +1,30 @@
+{
+ "metrics": {
+  "floorplan__design__core__area": 5885.64,
+  "floorplan__design__die__area": 6404,
+  "floorplan__design__instance__area": 2801.44,
+  "floorplan__design__instance__area__stdcell": 2801.44,
+  "floorplan__design__instance__count": 266,
+  "floorplan__design__instance__count__stdcell": 266,
+  "floorplan__design__instance__utilization": 0.475978,
+  "floorplan__design__instance__utilization__stdcell": 0.475978,
+  "floorplan__design__io": 54,
+  "floorplan__flow__errors__count": 0,
+  "floorplan__power__total": 0.00278044,
+  "floorplan__timing__fmax": 453383000.0,
+  "floorplan__timing__hold__tns": 0,
+  "floorplan__timing__hold__ws": 0.28669,
+  "floorplan__timing__setup__tns": -56.3596,
+  "floorplan__timing__setup__ws": -1.10564
+ },
+ "units": {
+  "capacitance": "1pF",
+  "current": "1mA",
+  "distance": "1um",
+  "power": "1nW",
+  "resistance": "1kohm",
+  "time": "1ns",
+  "voltage": "1v"
+ },
+ "warnings_grouped": {}
+}

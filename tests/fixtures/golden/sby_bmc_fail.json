@@ -1,0 +1,11 @@
+{
+ "failed_props": [
+  {
+   "location": "counter.v:22.57-22.79",
+   "name": "counter.$assert$counter.v:22$27",
+   "step": 12,
+   "trace_path": "counter/engine_0/trace.vcd"
+  }
+ ],
+ "status": "fail"
+}
