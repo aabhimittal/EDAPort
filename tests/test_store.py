@@ -36,7 +36,8 @@ def test_write_branch_restore_diff(store, tmp_path):
     assert store.diff(new, gone)["files_changed"]["removed"] == ["rtl/a.v"]
 
 
-@pytest.mark.parametrize("bad", ["../x", "/etc/passwd", "a/../../b", "", "a\x00b"])
+@pytest.mark.parametrize("bad", ["../x", "/etc/passwd", "a/../../b", "", "a\x00b", "a b.v", "x;!sh.v", "a\nb.v",
+                                 ".env", "-o", "rtl/+define+X.v"])
 def test_path_traversal_rejected(store, tmp_path, bad):
     base = store.import_dir(tree(tmp_path, {"a": "1"}))
     with pytest.raises(StoreError):
@@ -48,6 +49,14 @@ def test_bad_labels(store, tmp_path, bad):
     base = store.import_dir(tree(tmp_path, {"a": "1"}))
     with pytest.raises(StoreError):
         store.branch(base, bad)
+
+
+def test_import_skips_hidden_and_rejects_unsafe_names(store, tmp_path):
+    d = tree(tmp_path, {"rtl/a.v": "x", ".env": "SECRET=1", ".git/config": "x", "rtl/.cache": "x"})
+    assert set(store.manifest(store.import_dir(d))["files"]) == {"rtl/a.v"}
+    (d / "rtl/evil;!id.v").write_text("x")
+    with pytest.raises(StoreError):
+        store.import_dir(d)
 
 
 def test_capture_write_scope_and_metric_deltas(store, tmp_path):

@@ -75,6 +75,24 @@ declared output directory into the new snapshot. `snapshot_import` reads only un
 ORFS overrides must match `^[A-Z][A-Z0-9_]*$` and a conservative value charset. Containers run with
 `--network=none`. There is no Tcl passthrough (the spec suggests leaving it off by default).
 
+**Security model: read this before you run it.** Many design files are code: testbenches (Verilator
+supports `$system`), KLayout DRC decks (Ruby), `.sby` scripts, and Netgen setup files (Tcl). EDAPort executes
+them. Each runner treats them differently:
+
+| runner | what runs | isolation |
+|---|---|---|
+| `EDAPORT_RUNNER=docker` | oss-tools image | `--network=none`, only the scratch directory is mounted, runs as the calling uid |
+| `EDAPORT_RUNNER=local` (dev default) | host binaries | your user privileges, with only rlimits and a timeout |
+
+Use `local` only with agents and designs you trust.
+
+Snapshot paths are restricted to `[A-Za-z0-9_.+@-]` and must start with `[A-Za-z0-9_]`. They are spliced
+into Yosys scripts and tool argv, and Yosys `!` runs a shell command, so this restriction blocks command
+injection.
+
+`snapshot_import` skips hidden files such as `.env` and `.git`. It refuses every directory until
+`EDAPORT_IMPORT_ROOTS` is set.
+
 ## Layout
 
 ```
@@ -134,7 +152,7 @@ Read this result critically:
 | M1 | STA, flow stages, ORFS integration, DRC | done (ORFS/STA tested on gcd sky130hd, pinned image) |
 | M2 | formal, equiv, LVS; size limiter; log.page | done |
 | M3 | LLM A/B eval with solve rate | not done: only the observation-cost arm exists |
-| G5 | pinned containers | ORFS pinned by digest. The oss-tools Dockerfile is pinned but **not yet built or published**, and its lock digest is a placeholder. The default is the host binaries (`EDAPORT_RUNNER=local`), whose identity is the hash of each tool's version banner. |
+| G5 | pinned containers | ORFS pinned by digest. The oss-tools image built locally from the pinned Dockerfile, and every tool test passes inside it (`EDAPORT_RUNNER=docker EDAPORT_OSS_IMAGE=<image id>`). It is **not published to a registry yet**, so its lock digest is still a placeholder. The default is the host binaries (`EDAPORT_RUNNER=local`), whose identity is the hash of each tool's version banner. |
 
 Known gaps:
 

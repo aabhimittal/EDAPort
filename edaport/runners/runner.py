@@ -3,6 +3,7 @@
 import hashlib
 import json
 import os
+import re
 import resource
 import shlex
 import signal
@@ -88,8 +89,8 @@ class DockerRunner:
     kind = "docker"
 
     def __init__(self, image: str, docker: str = "docker", cpus: float | None = None, mem_limit_mb: int | None = None):
-        if "@sha256:" not in image:
-            raise ValueError(f"image must be pinned by digest: {image}")
+        if "@sha256:" not in image and not re.match(r"^sha256:[0-9a-f]{64}$", image):
+            raise ValueError(f"image must be pinned by digest (repo@sha256:... or a local sha256: image id): {image}")
         self.image, self.docker, self.cpus, self.mem_limit_mb = image, docker, cpus, mem_limit_mb
 
     def identity(self, binary: str) -> str:

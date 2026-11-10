@@ -63,6 +63,10 @@ class Ctx:
 
     def run(self, argv: list[str], timeout_s: float, runner=None, env=None, cwd: Path | None = None):
         runner = runner or self.engine.oss
+        if runner.kind == "docker" and cwd and Path(cwd) != self.wd:
+            # mount the whole scratch dir so relative paths like ../rtl stay visible; cd inside the container
+            argv = ["bash", "-c", f"cd {shlex.quote(str(Path(cwd).relative_to(self.wd)))} && exec {shlex.join(argv)}"]
+            cwd = None
         out = runner.run(argv, cwd or self.wd, timeout_s, env)
         # Scratch paths differ per run; normalize so logs and parsed messages are reproducible.
         log = out.log.replace(str(self.wd.resolve()), ".").replace(str(self.wd), ".")
@@ -91,9 +95,11 @@ class Engine:
         self.log = ReplayLog(self.home / "runs.jsonl")
         self.lock = load_lock()
         mode = runner or os.environ.get("EDAPORT_RUNNER", "local")
-        self.oss = DockerRunner(self.lock["oss-tools"]["image"]) if mode == "docker" else LocalRunner()
+        # local: host binaries, NOT sandboxed (testbenches, DRC decks and .sby files are code). docker: sandboxed.
+        oss_image = os.environ.get("EDAPORT_OSS_IMAGE", self.lock["oss-tools"]["image"])
+        self.oss = DockerRunner(oss_image) if mode == "docker" else LocalRunner()
         self._orfs = None
-        roots = os.environ.get("EDAPORT_IMPORT_ROOTS", os.getcwd())
+        roots = os.environ.get("EDAPORT_IMPORT_ROOTS", "")  # no default: the operator must opt directories in
         self.import_roots = [Path(r).resolve() for r in roots.split(os.pathsep) if r]
 
     @property
@@ -491,7 +497,7 @@ class Engine:
                           budget=DEFAULT_BUDGET):
         src = Path(path).resolve()
         if not any(src == r or r in src.parents for r in self.import_roots):
-            raise StoreError(f"{path} is outside EDAPORT_IMPORT_ROOTS")
+            raise StoreError(f"{path} is outside EDAPORT_IMPORT_ROOTS (set it to the directories agents may import)")
         if not src.is_dir():
             raise StoreError(f"{path} is not a directory")
         ref = self.store.import_dir(src, {"pdk_ref": pdk_ref} if pdk_ref else {})

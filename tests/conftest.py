@@ -17,7 +17,7 @@ def need(*binaries):
 def engine(tmp_path, monkeypatch):
     from edaport.server.engine import Engine
     monkeypatch.setenv("EDAPORT_IMPORT_ROOTS", str(ROOT))
-    return Engine(tmp_path / "home", runner="local")
+    return Engine(tmp_path / "home", runner=os.environ.get("EDAPORT_RUNNER", "local"))
 
 
 @pytest.fixture

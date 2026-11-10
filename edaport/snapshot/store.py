@@ -14,6 +14,8 @@ from pathlib import Path, PurePosixPath
 from ..util import canonical, sha256
 
 _REF = re.compile(r"^sha256:[0-9a-f]{64}$")
+# Paths end up inside tool scripts (Yosys .ys, make vars); a strict charset rules out command injection.
+_PATH_PART = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.+@-]*$")  # no leading "-"/"+": would read as a tool flag
 _LABEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$")
 # Fixed mtime for materialized files so make-based flows (ORFS) treat restored outputs as up to date.
 MATERIALIZE_MTIME = 1_000_000_000
@@ -27,8 +29,8 @@ class StoreError(ValueError):
 def check_relpath(path: str) -> str:
     """Trust boundary: snapshot paths come from agents. Reject anything that escapes the tree."""
     p = PurePosixPath(path)
-    if not path or "\x00" in path or p.is_absolute() or ".." in p.parts or str(p) in (".", ""):
-        raise StoreError(f"invalid snapshot path: {path!r}")
+    if not path or p.is_absolute() or str(p) in (".", "") or not all(_PATH_PART.match(x) for x in p.parts):
+        raise StoreError(f"invalid snapshot path: {path!r} (allowed: [A-Za-z0-9_.+@-], must start with [A-Za-z0-9_])")
     return str(p)
 
 
@@ -91,8 +93,10 @@ class Store:
         src = Path(src)
         files = {}
         for dirpath, dirnames, filenames in os.walk(src):
-            dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
+            dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS and not d.startswith("."))
             for name in sorted(filenames):
+                if name.startswith("."):
+                    continue  # hidden files (.env, credentials) never enter a snapshot
                 full = Path(dirpath) / name
                 if full.is_symlink() or not full.is_file():
                     continue
