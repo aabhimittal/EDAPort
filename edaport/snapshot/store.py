@@ -160,8 +160,11 @@ class Store:
         self.manifest(ref)  # must exist
         path = self.branches / label
         prev = path.read_text().strip() if path.is_file() else None
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(ref + "\n")
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(ref + "\n")
+        except OSError:  # "a" and "a/b" cannot both be branches (same rule as git refs)
+            raise StoreError(f"branch label {label!r} conflicts with an existing branch name")
         return prev
 
     def list_branches(self) -> dict[str, str]:

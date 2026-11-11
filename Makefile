@@ -1,6 +1,6 @@
 PY ?= python3
 
-.PHONY: install test test-fast demo demo-orfs eval-ab orfs-image serve
+.PHONY: install test test-fast demo demo-orfs agent-demo agent-demo-orfs eval-ab orfs-image serve
 
 install:
 	$(PY) -m pip install -e ".[test]"
@@ -16,6 +16,12 @@ demo:            ## counter design: lint -> sim -> formal -> fix on a branch -> 
 
 demo-orfs:       ## + gcd/sky130hd through ORFS stages and OpenSTA
 	$(PY) examples/demo.py --orfs
+
+agent-demo:      ## scripted agent, no LLM/API key: repair loop over candidate branches
+	$(PY) examples/agent_demo.py
+
+agent-demo-orfs: ## + timing-closure loop on gcd/sky130hd
+	$(PY) examples/agent_demo.py --orfs
 
 eval-ab:         ## A/B observation-cost eval + determinism rate -> evals/ab_interface/results.md
 	$(PY) evals/ab_interface/run.py --orfs
