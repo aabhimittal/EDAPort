@@ -131,5 +131,43 @@
   "replays": 2,
   "replays_matched": 2,
   "threads": 4
+ },
+ {
+  "task": "asap7_ibex",
+  "solved": true,
+  "flows": 1,
+  "error": null,
+  "period_start": 900.0,
+  "period_final": 900.0,
+  "wns_ps": 54.816,
+  "time_unit": "1ps",
+  "calls": 9,
+  "tool_errors": 0,
+  "a1_tokens": 2808,
+  "a0_tokens": 292658,
+  "wall_s": 1384.1,
+  "cpu_s": 2860.1,
+  "replays": 2,
+  "replays_matched": 2,
+  "threads": 4
+ },
+ {
+  "task": "sky130hd_jpeg",
+  "solved": true,
+  "flows": 1,
+  "error": null,
+  "period_start": 5.0,
+  "period_final": 5.0,
+  "wns_ps": 34.069,
+  "time_unit": "1ns",
+  "calls": 9,
+  "tool_errors": 0,
+  "a1_tokens": 2646,
+  "a0_tokens": 511791,
+  "wall_s": 1873.0,
+  "cpu_s": 4997.6,
+  "replays": 2,
+  "replays_matched": 2,
+  "threads": 4
  }
 ]
