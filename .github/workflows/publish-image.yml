@@ -13,20 +13,15 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - id: push
-        uses: docker/build-push-action@v6
-        with:
-          context: images/oss-tools
-          push: true
-          provenance: false
-          tags: ghcr.io/aabhimittal/edaport-oss-tools:0.1
-          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
-      - name: Report digest
+      # Plain docker CLI on purpose: no third-party actions in a job that holds packages:write.
+      - name: Build and push
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE: ghcr.io/aabhimittal/edaport-oss-tools:0.1
         run: |
-          echo "EDAPORT_IMAGE_DIGEST=${{ steps.push.outputs.digest }}"
-          echo "ghcr.io/aabhimittal/edaport-oss-tools@${{ steps.push.outputs.digest }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker build -t "$IMAGE" --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" images/oss-tools
+          docker push "$IMAGE"
+          DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE")
+          echo "EDAPORT_IMAGE_DIGEST=$DIGEST"
+          echo "$DIGEST" >> "$GITHUB_STEP_SUMMARY"
