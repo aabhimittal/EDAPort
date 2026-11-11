@@ -13,7 +13,7 @@
     ]
   },
   "oss-tools": {
-    "image": "ghcr.io/aabhimittal/edaport-oss-tools@sha256:e14911ecad670b8a20c60a56c34da2d5ddad1b605445decb691675c09572dcb8",
+    "image": "ghcr.io/aabhimittal/edaport-oss-tools@sha256:cead81659d81a42de56b0d93d3c40fe4ff0983c7e091e7dfc62fd5bd448dad8b",
     "dockerfile": "images/oss-tools/Dockerfile",
     "provides": [
       "yosys 0.33",
@@ -21,7 +21,8 @@
       "verilator 5.020",
       "sby 0.33 + z3",
       "klayout 0.28.16",
-      "netgen 1.5.133"
+      "netgen 1.5.133",
+      "cocotb 2.1.0"
     ],
     "used_by": [
       "lint_run",
@@ -32,6 +33,6 @@
       "drc_run",
       "lvs_run"
     ],
-    "note": "built and pushed by .github/workflows/publish-image.yml (run 42988594802 on main); use with EDAPORT_RUNNER=docker"
+    "note": "built and pushed by .github/workflows/publish-image.yml (run 43027024241 on main); use with EDAPORT_RUNNER=docker"
   }
 }
