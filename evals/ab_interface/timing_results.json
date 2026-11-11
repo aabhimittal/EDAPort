@@ -112,5 +112,24 @@
   "replays": 2,
   "replays_matched": 2,
   "threads": 4
+ },
+ {
+  "task": "sky130hd_ibex",
+  "solved": true,
+  "flows": 1,
+  "error": null,
+  "period_start": 8.0,
+  "period_final": 8.0,
+  "wns_ps": 566.507,
+  "time_unit": "1ns",
+  "calls": 9,
+  "tool_errors": 0,
+  "a1_tokens": 2809,
+  "a0_tokens": 316310,
+  "wall_s": 2752.9,
+  "cpu_s": 7181.8,
+  "replays": 2,
+  "replays_matched": 2,
+  "threads": 4
  }
 ]
