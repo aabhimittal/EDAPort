@@ -56,7 +56,8 @@ def build_server(engine: Engine | None = None) -> MCPServer:
                       coverage: bool = False, window_ns: float = 50,
                       budget_tokens: Budget = DEFAULT_BUDGET) -> M.SimResult:
         """Simulate (icarus|verilator). The testbench prints `TEST <name> PASS|FAIL @<ns> msg` lines.
-        On failure, first_failure.signal_window has value changes around the failure time from the VCD."""
+        On failure, first_failure.signal_window has value changes around the failure time from the VCD.
+        cocotb: pass .py test module(s) as tb_ref and the DUT module as top."""
         return await call("sim_run", M.SimResult, design_ref=design_ref, tb_ref=tb_ref, simulator=simulator,
                           seed=seed, timeout_s=timeout_s, top=top, files=files, coverage=coverage,
                           window_ns=window_ns, budget_tokens=budget_tokens)
@@ -90,28 +91,49 @@ def build_server(engine: Engine | None = None) -> MCPServer:
 
     @mcp.tool()
     async def sta_report_paths(design_ref: Ref, corner: str | None = None, k: int = 10, group: str | None = None,
-                               stage: str | None = None, config: str = "config.mk", threads: int = 1,
-                               timeout_s: float = 1800, budget_tokens: Budget = DEFAULT_BUDGET) -> M.StaResult:
-        """OpenSTA on the latest (or given) ORFS stage: WNS/TNS in ps and the k worst setup paths per group,
-        one row per cell with its delay."""
+                               stage: str | None = None, path_delay: str = "max", config: str = "config.mk",
+                               threads: int = 1, timeout_s: float = 1800,
+                               budget_tokens: Budget = DEFAULT_BUDGET) -> M.StaResult:
+        """OpenSTA on the latest (or given) ORFS stage: WNS/TNS in ps and the k worst paths per group
+        (path_delay max = setup, min = hold), one row per cell with its delay and net fanout."""
         return await call("sta_report_paths", M.StaResult, design_ref=design_ref, corner=corner, k=k, group=group,
-                          stage=stage, config=config, threads=threads, timeout_s=timeout_s,
+                          stage=stage, path_delay=path_delay, config=config, threads=threads, timeout_s=timeout_s,
                           budget_tokens=budget_tokens)
 
     @mcp.tool()
-    async def drc_run(design_ref: Ref, deck: str, gds: str | None = None, timeout_s: float = 1800,
+    async def tcl_run(design_ref: Ref, script: str, stage: str | None = None, config: str = "config.mk",
+                      threads: int = 1, timeout_s: float = 1800,
+                      budget_tokens: Budget = DEFAULT_BUDGET) -> M.TclResult:
+        """Escape hatch: run OpenROAD Tcl on a loaded ORFS stage. Disabled unless the operator sets
+        EDAPORT_ALLOW_TCL=1. The script is recorded in the replay log. Read-only: outputs are not captured."""
+        return await call("tcl_run", M.TclResult, design_ref=design_ref, script=script, stage=stage, config=config,
+                          threads=threads, timeout_s=timeout_s, budget_tokens=budget_tokens)
+
+    @mcp.tool()
+    async def coverage_report(coverage_ref: str, budget_tokens: Budget = DEFAULT_BUDGET) -> M.CoverageReport:
+        """Per-file coverage and uncovered source lines for a coverage_ref from sim_run(verilator, coverage=true)."""
+        return await call("coverage_report", M.CoverageReport, coverage_ref=coverage_ref,
+                          budget_tokens=budget_tokens)
+
+    @mcp.tool()
+    async def drc_run(design_ref: Ref, deck: str | None = None, gds: str | None = None, config: str = "config.mk",
+                      threads: int = 1, timeout_s: float = 1800,
                       budget_tokens: Budget = DEFAULT_BUDGET) -> M.DrcResult:
-        """KLayout DRC: violations grouped per rule with count and the first marker's bbox (um)."""
-        return await call("drc_run", M.DrcResult, design_ref=design_ref, deck=deck, gds=gds, timeout_s=timeout_s,
-                          budget_tokens=budget_tokens)
+        """KLayout DRC: violations grouped per rule with count and the first marker's bbox (um).
+        No deck: the PDK deck on the ORFS finish-stage GDS. With deck: a deck file in the snapshot."""
+        return await call("drc_run", M.DrcResult, design_ref=design_ref, deck=deck, gds=gds, config=config,
+                          threads=threads, timeout_s=timeout_s, budget_tokens=budget_tokens)
 
     @mcp.tool()
-    async def lvs_run(design_ref: Ref, layout: str, schematic: str, top: str, schematic_top: str | None = None,
-                      setup: str | None = None, timeout_s: float = 1800,
+    async def lvs_run(design_ref: Ref, layout: str | None = None, schematic: str | None = None,
+                      top: str | None = None, schematic_top: str | None = None, setup: str | None = None,
+                      config: str = "config.mk", threads: int = 1, timeout_s: float = 1800,
                       budget_tokens: Budget = DEFAULT_BUDGET) -> M.LvsResult:
-        """Netgen LVS between two netlists in the snapshot."""
+        """LVS. Only design_ref: the PDK's KLayout LVS on the ORFS finish stage. With layout, schematic and top:
+        Netgen between two netlists in the snapshot."""
         return await call("lvs_run", M.LvsResult, design_ref=design_ref, layout=layout, schematic=schematic, top=top,
-                          schematic_top=schematic_top, setup=setup, timeout_s=timeout_s, budget_tokens=budget_tokens)
+                          schematic_top=schematic_top, setup=setup, config=config, threads=threads,
+                          timeout_s=timeout_s, budget_tokens=budget_tokens)
 
     @mcp.tool()
     async def snapshot_import(path: str, label: str | None = None, pdk_ref: str | None = None) -> M.SnapshotResult:

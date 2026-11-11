@@ -1,6 +1,6 @@
 PY ?= python3
 
-.PHONY: install test test-fast demo demo-orfs agent-demo agent-demo-orfs eval-ab orfs-image serve
+.PHONY: install test test-fast demo demo-orfs agent-demo agent-demo-orfs eval-ab eval-timing orfs-image serve
 
 install:
 	$(PY) -m pip install -e ".[test]"
@@ -25,6 +25,9 @@ agent-demo-orfs: ## + timing-closure loop on gcd/sky130hd
 
 eval-ab:         ## A/B observation-cost eval + determinism rate -> evals/ab_interface/results.md
 	$(PY) evals/ab_interface/run.py --orfs
+
+eval-timing:     ## 10 ORFS timing-closure tasks, scripted policy (hours; resumes from timing_results.json)
+	$(PY) evals/ab_interface/timing_tasks.py
 
 orfs-image:      ## pull the digest-pinned ORFS image
 	docker pull $$($(PY) -c "import json;print(json.load(open('images/images.lock.json'))['orfs']['image'])")

@@ -75,8 +75,12 @@ class Store:
 
     def manifest(self, ref: str) -> dict:
         m = json.loads(self.get_blob(self.resolve(ref)))
-        if not isinstance(m, dict) or "files" not in m:
+        if not isinstance(m, dict) or not isinstance(m.get("files"), dict):  # tool results also have "files"
             raise StoreError(f"{ref} is not a design snapshot")
+        # A manifest can come from outside (S3 pull, a tampered store): never trust its paths or digests.
+        for path, digest in m["files"].items():
+            if check_relpath(path) != path or not isinstance(digest, str) or not _REF.match(digest):
+                raise StoreError(f"{ref}: unsafe manifest entry {path!r}")
         return m
 
     def resolve(self, ref_or_label: str) -> str:

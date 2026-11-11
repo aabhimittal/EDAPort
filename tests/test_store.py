@@ -92,3 +92,14 @@ def test_nested_label_conflict_is_typed_error(store, tmp_path):
     store.branch(base, "x/y")
     with pytest.raises(StoreError):
         store.branch(base, "x")
+
+
+def test_foreign_manifest_with_traversal_is_rejected(store, tmp_path):
+    """A manifest blob that did not go through put_manifest (e.g. pulled from S3) must not escape on materialize."""
+    from edaport.util import canonical
+    blob = store.put_blob(b"x")
+    for files in ({"../../evil": blob}, {"/etc/evil": blob}, {"ok.v": "not-a-digest"}):
+        bad = store.put_blob(canonical({"files": files, "meta": {}}))
+        with pytest.raises(StoreError):
+            store.materialize(bad, tmp_path / "out")
+    assert not (tmp_path / "evil").exists()
