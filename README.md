@@ -46,6 +46,22 @@ claude mcp add edaport -e EDAPORT_HOME=$PWD/.edaport -e EDAPORT_IMPORT_ROOTS=$PW
 CLI over the same engine: `edaport import DIR --label main`, `edaport call lint_run '{"design_ref":"main"}'`,
 `edaport runs`, `edaport log r-0003 --pattern Error`, `edaport replay r-0003`, `edaport branches`, `edaport gc`.
 
+## Agent demo without an LLM (`make agent-demo`, `make agent-demo-orfs`)
+
+`examples/agent_demo.py` is a scripted, rule-based agent that drives the MCP server over stdio and decides
+only from typed results. No API key is needed. Output of a real run (2026-11-11):
+
+- **Repair loop.** `sim_run` fails at 116 ns. The agent writes 10 one-operator patches, each to its own
+  branch. 5 pass simulation, 3 of those also pass a formal proof, and coverage breaks the tie:
+  `(count > MAX) -> (count >= MAX)`. It then signs off with synthesis, equivalence and replay.
+- **Timing-closure loop.** gcd on sky130hd misses its 1.1 ns clock (WNS -1790 ps at floorplan). The agent
+  relaxes the clock by the slack deficit plus 5%, re-runs synth through route on a branch, and checks with
+  OpenSTA: closed at 2.98 ns with post-route WNS +28 ps and 0 DRC errors. 49 tool calls in total.
+
+Limits: the candidates come from a fixed rule (swap one comparison operator), and timing is closed only by
+relaxing the clock, not by improving the design. An LLM would replace the candidate generator; the tool
+loop stays the same. CI runs the repair loop and puts the transcript in the job summary.
+
 ## Tools (v1)
 
 The spec name `lint.run` becomes the MCP name `lint_run`. Several clients, the Anthropic API among them,

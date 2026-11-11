@@ -1,0 +1,27 @@
+name: publish-oss-tools-image
+# Builds images/oss-tools and pushes it to GHCR with the repo's own GITHUB_TOKEN (no extra secrets).
+# The digest printed in the job summary is what goes into images/images.lock.json.
+on:
+  workflow_dispatch:
+  push:
+    paths: ["images/oss-tools/**", ".github/workflows/publish-image.yml"]
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      # Plain docker CLI on purpose: no third-party actions in a job that holds packages:write.
+      - name: Build and push
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE: ghcr.io/aabhimittal/edaport-oss-tools:0.1
+        run: |
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker build -t "$IMAGE" --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" images/oss-tools
+          docker push "$IMAGE"
+          DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE")
+          echo "EDAPORT_IMAGE_DIGEST=$DIGEST"
+          echo "$DIGEST" >> "$GITHUB_STEP_SUMMARY"

@@ -82,3 +82,13 @@ def test_gc_keeps_reachable(store, tmp_path):
     assert removed == 2  # dropped manifest + its unique blob
     assert store.has(keep) and not store.has(drop)
     assert store.read_file("main", "a") == b"1"
+
+
+def test_nested_label_conflict_is_typed_error(store, tmp_path):
+    base = store.import_dir(tree(tmp_path, {"a": "1"}))
+    store.branch(base, "gcd")
+    with pytest.raises(StoreError):
+        store.branch(base, "gcd/period-2")
+    store.branch(base, "x/y")
+    with pytest.raises(StoreError):
+        store.branch(base, "x")
