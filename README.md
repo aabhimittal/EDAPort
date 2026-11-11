@@ -168,7 +168,7 @@ Read this result critically:
 | M1 | STA, flow stages, ORFS integration, DRC | done (ORFS/STA tested on gcd sky130hd, pinned image) |
 | M2 | formal, equiv, LVS; size limiter; log.page | done |
 | M3 | LLM A/B eval with solve rate | not done: only the observation-cost arm exists |
-| G5 | pinned containers | ORFS pinned by digest. The oss-tools image built locally from the pinned Dockerfile, and every tool test passes inside it (`EDAPORT_RUNNER=docker EDAPORT_OSS_IMAGE=<image id>`). It is **not published to a registry yet**, so its lock digest is still a placeholder. The default is the host binaries (`EDAPORT_RUNNER=local`), whose identity is the hash of each tool's version banner. |
+| G5 | pinned containers | Both images are pinned by digest in `images/images.lock.json`: ORFS, and oss-tools (published to GHCR by the `publish-image` workflow). `EDAPORT_RUNNER=docker` runs every tool in them. The dev default is still the host binaries (`EDAPORT_RUNNER=local`). |
 
 Known gaps:
 

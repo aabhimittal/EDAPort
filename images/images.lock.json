@@ -13,7 +13,7 @@
     ]
   },
   "oss-tools": {
-    "image": "ghcr.io/aabhimittal/edaport-oss-tools@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "image": "ghcr.io/aabhimittal/edaport-oss-tools@sha256:e14911ecad670b8a20c60a56c34da2d5ddad1b605445decb691675c09572dcb8",
     "dockerfile": "images/oss-tools/Dockerfile",
     "provides": [
       "yosys 0.33",
@@ -32,6 +32,6 @@
       "drc_run",
       "lvs_run"
     ],
-    "note": "placeholder digest until published to a registry. Verified locally: docker build images/oss-tools, then EDAPORT_RUNNER=docker EDAPORT_OSS_IMAGE=<sha256 image id> (all tool tests pass in the sandbox)"
+    "note": "built and pushed by .github/workflows/publish-image.yml (run 42988594802 on main); use with EDAPORT_RUNNER=docker"
   }
 }
