@@ -12,7 +12,8 @@ license = { text = "MIT" }  # matches LICENSE; spec draft says Apache-2.0, owner
 dependencies = ["mcp>=2.3", "pydantic>=2.7"]
 
 [project.optional-dependencies]
-test = ["pytest>=8", "jsonschema>=4"]
+test = ["pytest>=8", "jsonschema>=4", "cocotb>=2", "boto3", "moto[s3]>=5"]
+s3 = ["boto3"]
 
 [project.scripts]
 edaport = "edaport.cli:main"

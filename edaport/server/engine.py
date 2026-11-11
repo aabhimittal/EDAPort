@@ -15,7 +15,7 @@ import tempfile
 from pathlib import Path
 
 from ..models import RESULT_MODELS
-from ..parsers import (iverilog_lint, klayout_lyrdb, netgen_lvs, opensta_json, orfs_metrics, sby_status, sim_log,
+from ..parsers import (iverilog_lint, junit_xml, klayout_lyrdb, netgen_lvs, opensta_json, orfs_metrics, sby_status, sim_log,
                        vcd, verilator_coverage, verilator_lint, yosys_equiv, yosys_synth)
 from ..replay.log import ReplayLog
 from ..runners.runner import CONTAINER_WORKDIR, DockerRunner, LocalRunner, load_lock
@@ -97,7 +97,10 @@ class Engine:
         mode = runner or os.environ.get("EDAPORT_RUNNER", "local")
         # local: host binaries, NOT sandboxed (testbenches, DRC decks and .sby files are code). docker: sandboxed.
         oss_image = os.environ.get("EDAPORT_OSS_IMAGE", self.lock["oss-tools"]["image"])
-        self.oss = DockerRunner(oss_image) if mode == "docker" else LocalRunner()
+        # Container resource caps (cgroups): EDAPORT_DOCKER_CPUS / EDAPORT_DOCKER_MEM_MB, unset = unlimited.
+        self.limits = {"cpus": float(os.environ["EDAPORT_DOCKER_CPUS"]) if os.environ.get("EDAPORT_DOCKER_CPUS") else None,
+                       "mem_limit_mb": int(os.environ["EDAPORT_DOCKER_MEM_MB"]) if os.environ.get("EDAPORT_DOCKER_MEM_MB") else None}
+        self.oss = DockerRunner(oss_image, **self.limits) if mode == "docker" else LocalRunner()
         self._orfs = None
         roots = os.environ.get("EDAPORT_IMPORT_ROOTS", "")  # no default: the operator must opt directories in
         self.import_roots = [Path(r).resolve() for r in roots.split(os.pathsep) if r]
@@ -105,7 +108,7 @@ class Engine:
     @property
     def orfs(self) -> DockerRunner:
         if self._orfs is None:
-            self._orfs = DockerRunner(os.environ.get("EDAPORT_ORFS_IMAGE", self.lock["orfs"]["image"]))
+            self._orfs = DockerRunner(os.environ.get("EDAPORT_ORFS_IMAGE", self.lock["orfs"]["image"]), **self.limits)
         return self._orfs
 
     # ------------------------------------------------------------------ dispatch
@@ -259,6 +262,8 @@ class Engine:
                 self._need(mf, t, "tb_ref")
             fl = [f for f in self._files(ref, files) if f not in tbs] + tbs
             (ctx.wd / "build/sim").mkdir(parents=True, exist_ok=True)
+            if all(t.endswith(".py") for t in tbs):
+                return self._cocotb(ctx, [f for f in fl if f not in tbs], tbs, simulator, top, seed, timeout_s)
             if simulator == "icarus":
                 comp = ctx.run(["iverilog", "-g2012", "-o", "build/sim/sim.vvp", "-s", top] + fl, timeout_s)
                 if comp.rc != 0:
@@ -297,6 +302,25 @@ class Engine:
         if resp["error"] and resp["error"]["kind"] == "timeout":
             resp["status"] = "timeout"
         return resp
+
+    def _cocotb(self, ctx: Ctx, hdl: list[str], tests: list[str], simulator: str, top: str, seed: int, timeout_s):
+        """tb_ref = cocotb test module(s) (.py); `top` is then the DUT module. Results come from JUnit XML."""
+        mods = [Path(t).stem for t in tests]
+        script = (
+            "import os, sys\nfrom cocotb_tools.runner import get_runner\n"
+            "os.environ.pop('PYTEST_CURRENT_TEST', None)  # cocotb changes behaviour when it thinks pytest drives it\n"
+            f"sys.path[:0] = {sorted({str(Path(t).parent) for t in tests})!r}\n"
+            f"r = get_runner({simulator!r})\n"
+            f"r.build(sources={hdl!r}, hdl_toplevel={top!r}, build_dir='build/sim', always=True,\n"
+            "        timescale=('1ns', '1ps'))\n"
+            f"r.test(test_module={mods!r}, hdl_toplevel={top!r}, build_dir='build/sim', test_dir='.', seed={seed},\n"
+            f"       results_xml='build/sim/results.xml', extra_env={{'PYTHONPATH': ':'.join(sys.path[:{len(tests)}])}})\n")
+        (ctx.wd / "build/sim/run_cocotb.py").write_text(script)
+        run = ctx.run(["python3", "build/sim/run_cocotb.py"], timeout_s)
+        xml = ctx.wd / "build/sim/results.xml"
+        if not xml.exists():
+            raise ToolFail("tool_failed", _first_error(run.log))
+        ctx.payload.update(junit_xml.parse(xml.read_text()))
 
     # ------------------------------------------------------------------ formal / equiv
     def t_formal_run(self, design_ref: str, sby_ref: str, mode: str | None = None, depth: int | None = None,
@@ -403,11 +427,32 @@ class Engine:
 
         return self._execute("flow_run_stage", args, design_ref, {"stage": stage}, body, budget)
 
+    def _orfs_design(self, ctx: Ctx, stage: str | None) -> tuple[str, str]:
+        """Pick the ODB/SDC of `stage` (default: latest in the snapshot) -> (stage, Tcl that loads it)."""
+        results = sorted(ctx.wd.glob("orfs/results/*/*/*"))
+        if not results:
+            raise ToolFail("bad_input", "no ORFS results in snapshot; run flow_run_stage first")
+        have = {p.name for p in results[0].iterdir()}
+        pick = [(s, b) for s, b in ORFS_ODB if f"{b}.odb" in have and (stage is None or s == stage)]
+        if not pick:
+            raise ToolFail("bad_input", f"no ODB for stage {stage!r} in snapshot")
+        st, base = pick[0]
+        sdc = f"{base}.sdc" if f"{base}.sdc" in have else next(
+            (f"{b}.sdc" for _, b in ORFS_ODB if f"{b}.sdc" in have), "")
+        return st, f"source $::env(SCRIPTS_DIR)/load.tcl\nload_design {base}.odb {sdc}\n"
+
+    def _orfs_tcl(self, ctx: Ctx, tcl: str, config: str, threads: int, timeout_s: float):
+        (ctx.wd / ".edaport_run.tcl").write_text(tcl)
+        return ctx.run(self._orfs_cmd(config, threads, ["run"], {"RUN_SCRIPT": f"{CONTAINER_WORKDIR}/.edaport_run.tcl"}),
+                       timeout_s, runner=self.orfs)
+
     def t_sta_report_paths(self, design_ref: str, corner: str | None = None, k: int = 10, group: str | None = None,
-                           stage: str | None = None, config: str = "config.mk", threads: int = 1,
-                           timeout_s: float = 1800, budget=DEFAULT_BUDGET):
-        args = {"corner": corner, "k": k, "group": group, "stage": stage, "config": config, "threads": threads,
-                "timeout_s": timeout_s}
+                           stage: str | None = None, path_delay: str = "max", config: str = "config.mk",
+                           threads: int = 1, timeout_s: float = 1800, budget=DEFAULT_BUDGET):
+        args = {"corner": corner, "k": k, "group": group, "stage": stage, "path_delay": path_delay, "config": config,
+                "threads": threads, "timeout_s": timeout_s}
+        if path_delay not in ("max", "min"):
+            raise StoreError("path_delay must be max (setup) or min (hold)")
         for name, v in (("corner", corner), ("group", group)):
             if v is not None and not re.match(r"^[A-Za-z0-9_.\-]+$", v):
                 raise StoreError(f"invalid {name} {v!r}")
@@ -415,41 +460,72 @@ class Engine:
 
         def body(ctx: Ctx):
             ctx.threads = threads
-            results = sorted(ctx.wd.glob("orfs/results/*/*/*"))
-            if not results:
-                raise ToolFail("bad_input", "no ORFS results in snapshot; run flow_run_stage first")
-            have = {p.name for p in results[0].iterdir()}
-            pick = [(s, b) for s, b in ORFS_ODB if f"{b}.odb" in have and (stage is None or s == stage)]
-            if not pick:
-                raise ToolFail("bad_input", f"no ODB for stage {stage!r} in snapshot")
-            st, base = pick[0]
-            sdc = f"{base}.sdc" if f"{base}.sdc" in have else next(
-                (f"{b}.sdc" for _, b in ORFS_ODB if f"{b}.sdc" in have), "")
+            st, load = self._orfs_design(ctx, stage)
             ctx.payload["stage"] = st
-            opts = f"-path_delay max -group_path_count {k} -format json"
+            opts = f"-path_delay {path_delay} -group_path_count {k} -format json"
             opts += f" -path_group {group}" if group else ""
             opts += f" -corner {corner}" if corner else ""
-            tcl = (f"source $::env(SCRIPTS_DIR)/load.tcl\nload_design {base}.odb {sdc}\n"
-                   + 'puts "EDAPORT_WNS [sta::worst_slack_cmd max]"\n'
-                   + 'puts "EDAPORT_TNS [sta::total_negative_slack_cmd max]"\n'
+            tcl = (load + f'puts "EDAPORT_WNS [sta::worst_slack_cmd {path_delay}]"\n'
+                   + f'puts "EDAPORT_TNS [sta::total_negative_slack_cmd {path_delay}]"\n'
+                   + 'foreach net [get_nets *] { puts "EDAPORT_FO [get_full_name $net] '
+                     '[llength [get_pins -of_objects $net -filter "direction == input"]]" }\n'
                    + f"report_checks {opts}\n")
-            (ctx.wd / ".edaport_sta.tcl").write_text(tcl)
-            run = ctx.run(self._orfs_cmd(config, threads, ["run"], {"RUN_SCRIPT": f"{CONTAINER_WORKDIR}/.edaport_sta.tcl"}),
-                          timeout_s, runner=self.orfs)
+            run = self._orfs_tcl(ctx, tcl, config, threads, timeout_s)
             if run.rc != 0 or "EDAPORT_WNS" not in run.log:
                 errs = _ORFS_ERROR.findall(run.log)
                 raise ToolFail("tool_failed", errs[0] if errs else f"sta rc={run.rc}")
             ctx.payload.update(opensta_json.parse(run.log))
 
-        return self._execute("sta_report_paths", args, design_ref, {"stage": stage or "latest", "corner": corner},
-                             body, budget)
+        return self._execute("sta_report_paths", args, design_ref, {"stage": stage or "latest", "corner": corner,
+                                                                         "path_delay": path_delay}, body, budget)
 
-    # ------------------------------------------------------------------ physical verification
-    def t_drc_run(self, design_ref: str, deck: str, gds: str | None = None, timeout_s: float = 1800,
-                  budget=DEFAULT_BUDGET):
-        args = {"deck": deck, "gds": gds, "timeout_s": timeout_s}
+    def t_tcl_run(self, design_ref: str, script: str, stage: str | None = None, config: str = "config.mk",
+                  threads: int = 1, timeout_s: float = 1800, budget=DEFAULT_BUDGET):
+        """Escape hatch: run OpenROAD Tcl on a loaded stage. Off unless EDAPORT_ALLOW_TCL=1; the script is logged."""
+        args = {"script": script, "stage": stage, "config": config, "threads": threads, "timeout_s": timeout_s}
+        if os.environ.get("EDAPORT_ALLOW_TCL") != "1":
+            raise StoreError("Tcl passthrough is disabled; the operator must set EDAPORT_ALLOW_TCL=1")
+        if len(script) > 20_000:
+            raise StoreError("script too long (max 20000 chars)")
 
         def body(ctx: Ctx):
+            ctx.threads = threads
+            st, load = self._orfs_design(ctx, stage)
+            ctx.payload["stage"] = st
+            run = self._orfs_tcl(ctx, load + 'puts "@@EDAPORT_TCL_BEGIN"\n' + script + "\n", config, threads, timeout_s)
+            out = run.log.partition("@@EDAPORT_TCL_BEGIN\n")[2].splitlines()
+            out = [l for l in out if not l.startswith(("make: ", "Elapsed time:"))]
+            ctx.payload.update(lines=out[-200:], total_lines=len(out))
+            if run.rc != 0:
+                errs = _ORFS_ERROR.findall(run.log)
+                raise ToolFail("tool_failed", errs[0] if errs else f"openroad rc={run.rc}")
+
+        return self._execute("tcl_run", args, design_ref, {"stage": stage or "latest"}, body, budget)
+
+    # ------------------------------------------------------------------ physical verification
+    def _orfs_signoff(self, ctx: Ctx, target: str, config: str, threads: int, timeout_s: float):
+        ctx.threads = threads
+        if not list(ctx.wd.glob("orfs/results/*/*/*/6_final.gds")):
+            raise ToolFail("bad_input", f"ORFS {target} needs the finish stage (6_final.gds); run flow_run_stage finish")
+        run = ctx.run(self._orfs_cmd(config, threads, [target]), timeout_s, runner=self.orfs)
+        if run.rc != 0:
+            errs = _ORFS_ERROR.findall(run.log)
+            raise ToolFail("tool_failed", errs[0] if errs else f"make {target} rc={run.rc}")
+        return run
+
+    def t_drc_run(self, design_ref: str, deck: str | None = None, gds: str | None = None, config: str = "config.mk",
+                  threads: int = 1, timeout_s: float = 1800, budget=DEFAULT_BUDGET):
+        """deck=None: the PDK's KLayout deck on the ORFS finish-stage GDS. Otherwise: a deck file in the snapshot."""
+        args = {"deck": deck, "gds": gds, "config": config, "threads": threads, "timeout_s": timeout_s}
+
+        def body(ctx: Ctx):
+            if deck is None:
+                self._orfs_signoff(ctx, "drc", config, threads, timeout_s)
+                rpt = next(iter(ctx.wd.glob("orfs/reports/*/*/*/6_drc.lyrdb")), None)
+                if rpt is None:
+                    raise ToolFail("tool_failed", "ORFS produced no 6_drc.lyrdb")
+                ctx.payload.update(klayout_lyrdb.parse(rpt.read_text()))
+                return
             mf = self.store.manifest(self.store.resolve(design_ref))["files"]
             self._need(mf, deck, "deck")
             layout = gds or next((f for f in sorted(mf, key=lambda f: ("6_final" not in f, f))
@@ -467,15 +543,26 @@ class Engine:
 
         return self._execute("drc_run", args, design_ref, {}, body, budget)
 
-    def t_lvs_run(self, design_ref: str, layout: str, schematic: str, top: str, schematic_top: str | None = None,
-                  setup: str | None = None, timeout_s: float = 1800, budget=DEFAULT_BUDGET):
+    def t_lvs_run(self, design_ref: str, layout: str | None = None, schematic: str | None = None,
+                  top: str | None = None, schematic_top: str | None = None, setup: str | None = None,
+                  config: str = "config.mk", threads: int = 1, timeout_s: float = 1800, budget=DEFAULT_BUDGET):
+        """No layout/schematic: the PDK's KLayout LVS on the ORFS finish stage. Otherwise: Netgen on two netlists."""
         args = {"layout": layout, "schematic": schematic, "top": top, "schematic_top": schematic_top,
-                "setup": setup, "timeout_s": timeout_s}
+                "setup": setup, "config": config, "threads": threads, "timeout_s": timeout_s}
+        flow_mode = layout is None and schematic is None
+        if not flow_mode and not (layout and schematic and top):
+            raise StoreError("give layout, schematic and top together, or none of them for ORFS LVS")
         for v in (top, schematic_top):
             if v is not None and not re.match(r"^[A-Za-z0-9_$.\-]+$", v):
                 raise StoreError(f"invalid cell name {v!r}")
 
         def body(ctx: Ctx):
+            if flow_mode:
+                log = self._orfs_signoff(ctx, "lvs", config, threads, timeout_s).log
+                match = True if "Netlists match" in log else (False if "Netlists don't match" in log else None)
+                bad = [] if match else [l.strip() for l in log.splitlines() if re.match(r"\s*(ERROR|WARNING)\s*:", l)]
+                ctx.payload.update(match=match, mismatches=bad)
+                return
             mf = self.store.manifest(self.store.resolve(design_ref))["files"]
             for p, what in ((layout, "layout"), (schematic, "schematic")) + (((setup, "setup"),) if setup else ()):
                 self._need(mf, p, what)
@@ -588,6 +675,15 @@ class Engine:
         return self._record("result_page", {"more_handle": more_handle, "path": path, "offset": offset,
                                             "limit": limit}, None, None, payload, budget)
 
+    def t_coverage_report(self, coverage_ref: str, budget=DEFAULT_BUDGET):
+        """Per-file detail of a coverage_ref returned by sim_run(simulator="verilator", coverage=True)."""
+        text = self.store.get_blob(coverage_ref).decode(errors="replace")
+        files = verilator_coverage.report(text)
+        if not files:
+            raise StoreError(f"{coverage_ref} is not a verilator coverage.dat")
+        return self._record("coverage_report", {"coverage_ref": coverage_ref}, None, None,
+                            {**verilator_coverage.parse(text), "files": files}, budget)
+
     def t_replay_run(self, run_id: str, budget=DEFAULT_BUDGET):
         """Re-execute a recorded call with identical inputs and compare result digests."""
         rec = self._run(run_id)
@@ -607,11 +703,15 @@ class Engine:
         except KeyError as e:
             raise StoreError(str(e))
 
-    def gc(self) -> int:
+    def gc(self, keep_runs: int | None = None) -> int:
+        """Evict objects unreachable from branches and the replay log (optionally only its last keep_runs runs)."""
+        recs = self.log.records()
         keep = set()
-        for rec in self.log.records():
+        for rec in recs[-keep_runs:] if keep_runs else recs:
             keep.update(v for k, v in rec.items() if k.endswith("_ref") and isinstance(v, str))
             keep.update(v for k, v in rec.get("args", {}).items() if k.endswith("_ref") and isinstance(v, str))
+            if self.store.has(rec["result_ref"]):  # blobs named inside results (trace_ref, coverage_ref)
+                keep.update(re.findall(r"sha256:[0-9a-f]{64}", self.store.get_blob(rec["result_ref"]).decode()))
         return self.store.gc(keep)
 
 

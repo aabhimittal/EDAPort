@@ -44,7 +44,8 @@ claude mcp add edaport -e EDAPORT_HOME=$PWD/.edaport -e EDAPORT_IMPORT_ROOTS=$PW
 ```
 
 CLI over the same engine: `edaport import DIR --label main`, `edaport call lint_run '{"design_ref":"main"}'`,
-`edaport runs`, `edaport log r-0003 --pattern Error`, `edaport replay r-0003`, `edaport branches`, `edaport gc`.
+`edaport runs`, `edaport log r-0003 --pattern Error`, `edaport replay r-0003`, `edaport replay --all` (determinism
+rate over every EDA run in the log), `edaport branches`, `edaport gc [--keep-runs N]`, `edaport push|pull REF s3://bucket/prefix`.
 
 ## Agent demo without an LLM (`make agent-demo`, `make agent-demo-orfs`)
 
@@ -71,13 +72,15 @@ only accept tool names that match `^[a-zA-Z0-9_-]{1,64}$`.
 |---|---|---|
 | `lint_run` | Verilator `--lint-only -Wall` / `iverilog -t null` | `errors[]`, `warnings[]` `{file,line,code,msg}`, `warnings_grouped` |
 | `synth_run` | Yosys `synth` (+ `dfflibmap`/`abc` with a liberty) | `cells`, `cell_types`, `area_um2`, `logic_depth`, `netlist_ref`, new `design_ref` |
-| `sim_run` | Icarus or Verilator (`coverage=true` writes `coverage.dat`) | `status`, `tests[]`, `first_failure.signal_window` (VCD changes around the failure), `coverage` |
+| `sim_run` | Icarus or Verilator (`coverage=true` writes `coverage.dat`); cocotb when `tb_ref` is a `.py` test module | `status`, `tests[]`, `first_failure.signal_window` (VCD changes around the failure), `coverage` |
 | `formal_run` | SymbiYosys (`mode`/`depth` override the .sby) | `status`, `failed_props[] {name,step,location,trace_ref}` |
 | `equiv_run` | Yosys `equiv_make/simple/induct` | `equivalent`, `proven/total`, `unproven[]` |
 | `flow_run_stage` | ORFS `make <stage>` in the pinned image | curated QoR `metrics`, `units`, `warnings_grouped`, new `design_ref` |
-| `sta_report_paths` | OpenSTA `report_checks -format json` | `wns_ps`, `tns_ps`, `paths[] {slack_ps,start,end,clock,stages[]}` |
-| `drc_run` | KLayout batch DRC (`.lyrdb`) | `violations[] {rule,layer,bbox_um,count}`, `total` |
-| `lvs_run` | Netgen (`-json`) | `match`, `mismatches[]` |
+| `sta_report_paths` | OpenSTA `report_checks -format json`; `path_delay=max` (setup) or `min` (hold) | `wns_ps`, `tns_ps`, `paths[] {slack_ps,start,end,clock,stages[] {cell,pin,net,delay_ps,fanout}}` |
+| `drc_run` | No `deck`: the PDK's KLayout deck on the ORFS finish-stage GDS. With `deck`: KLayout on a deck in the snapshot | `violations[] {rule,layer,bbox_um,count}`, `total` |
+| `lvs_run` | Only `design_ref`: the PDK's KLayout LVS on the ORFS finish stage. With two netlists: Netgen (`-json`) | `match`, `mismatches[]` |
+| `coverage_report` | Verilator `coverage.dat` (a `coverage_ref`) | per file: `points`, `hit`, `uncovered {type: [lines]}` |
+| `tcl_run` | OpenROAD Tcl on a loaded stage. **Off unless `EDAPORT_ALLOW_TCL=1`**; the script is logged | `lines[]` of script output |
 | `snapshot_import/read/write/branch/restore/diff` | store | refs, listings, file windows, file + metric deltas |
 | `log_page`, `result_page` | store | raw-log grep/paging; full text of trimmed fields |
 | `replay_run` | replay log | `match`, both digests, `output_ref_match` |
@@ -165,17 +168,21 @@ Read this result critically:
 | | item | state |
 |---|---|---|
 | M0 | lint, synth, sim; snapshot store; replay log; CI on tiny designs | done |
-| M1 | STA, flow stages, ORFS integration, DRC | done (ORFS/STA tested on gcd sky130hd, pinned image) |
+| M1 | STA, flow stages, ORFS integration, DRC | done; setup and hold paths, PDK DRC and LVS on routed gcd (0 violations, netlists match) |
 | M2 | formal, equiv, LVS; size limiter; log.page | done |
 | M3 | LLM A/B eval with solve rate | not done: only the observation-cost arm exists |
 | G5 | pinned containers | Both images are pinned by digest in `images/images.lock.json`: ORFS, and oss-tools (published to GHCR by the `publish-image` workflow). `EDAPORT_RUNNER=docker` runs every tool in them. The dev default is still the host binaries (`EDAPORT_RUNNER=local`). |
 
 Known gaps:
 
-- S3 snapshot backend is not implemented.
-- `sta.fanout` is always null: OpenSTA's JSON output has no fanout.
-- STA covers setup only and keeps the delay precision of the JSON (about 10 ps).
+- **eqy** is not used: `equiv_run` runs Yosys's `equiv_*` passes. Building eqy was blocked in the development sandbox.
+- **S3** is a push/pull remote (`edaport push|pull REF s3://bucket/prefix`), not a live store backend. It is tested against a mock S3 (moto), not real AWS.
+- **`corner`** is passed to OpenSTA but untested: the designs tried have a single corner.
+- STA keeps the delay precision of OpenSTA's JSON (about 10 ps). Fanout is dumped per net and can be null where net names differ.
 - `output_ref` of ORFS stages is not deterministic, because ORFS logs contain runtimes. Replay compares the
   typed result digest, which leaves out runtime and memory metrics.
-- ORFS images run as the calling uid with `HOME=/tmp`.
+- `tcl_run` is read-only: files a script writes are not captured into a snapshot.
+- ORFS images run as the calling uid with `HOME=/tmp`. Container CPU and memory caps are opt-in
+  (`EDAPORT_DOCKER_CPUS`, `EDAPORT_DOCKER_MEM_MB`).
+- Snapshot eviction is manual: `edaport gc [--keep-runs N]`.
 - Replay-log lookup is a linear scan.

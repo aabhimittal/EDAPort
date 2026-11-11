@@ -41,3 +41,24 @@ def test_gcd_stages_sta_and_replay(engine):
     # single-threaded replay reproduces the typed result exactly
     rp = engine.call("replay_run", run_id=runs["floorplan"]["run_id"])
     assert rp["match"], json.dumps(rp)
+
+
+def test_signoff_hold_fanout_and_tcl(engine, monkeypatch):
+    """Full gcd flow, then the PDK's DRC + LVS decks, hold paths, fanout and the gated Tcl escape hatch."""
+    ref = engine.call("snapshot_import", path=str(ROOT / "examples/gcd_sky130hd"))["design_ref"]
+    for stage in ("synth", "floorplan", "place", "cts", "grt", "route", "finish"):
+        r = engine.call("flow_run_stage", design_ref=ref, stage=stage, threads=4)
+        assert r["ok"], r["error"]
+        ref = r["design_ref"]
+    drc = engine.call("drc_run", design_ref=ref, threads=4)
+    assert drc["ok"] and drc["total"] == 0, drc
+    lvs = engine.call("lvs_run", design_ref=ref, threads=4)
+    assert lvs["ok"] and lvs["match"] is True, lvs
+    hold = engine.call("sta_report_paths", design_ref=ref, k=1, path_delay="min", threads=4)
+    assert hold["ok"] and hold["path_delay"] == "min" and hold["wns_ps"] > 0
+    setup = engine.call("sta_report_paths", design_ref=ref, k=1, threads=4)
+    fan = [s["fanout"] for s in setup["paths"][0]["stages"] if s["fanout"] is not None]
+    assert fan and all(f >= 1 for f in fan)
+    monkeypatch.setenv("EDAPORT_ALLOW_TCL", "1")
+    tcl = engine.call("tcl_run", design_ref=ref, script='puts "cells [llength [get_cells *]]"', threads=4)
+    assert tcl["ok"] and tcl["lines"][0].startswith("cells ") and int(tcl["lines"][0].split()[1]) > 100

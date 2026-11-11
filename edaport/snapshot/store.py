@@ -75,7 +75,7 @@ class Store:
 
     def manifest(self, ref: str) -> dict:
         m = json.loads(self.get_blob(self.resolve(ref)))
-        if not isinstance(m, dict) or "files" not in m:
+        if not isinstance(m, dict) or not isinstance(m.get("files"), dict):  # tool results also have "files"
             raise StoreError(f"{ref} is not a design snapshot")
         return m
 

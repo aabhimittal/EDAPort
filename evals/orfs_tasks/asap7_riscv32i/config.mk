@@ -1,0 +1,3 @@
+# riscv32i on asap7: ORFS reference design from the pinned image; only the constraints live in the snapshot.
+include /OpenROAD-flow-scripts/flow/designs/asap7/riscv32i/config.mk
+export SDC_FILE = $(DESIGN_DIR)/constraint.sdc

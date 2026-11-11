@@ -129,6 +129,7 @@ class StaPath(_M):
 class StaResult(Envelope):
     stage: str = ""
     corner: str | None = None
+    path_delay: str = Field("max", description="max = setup paths, min = hold paths")
     wns_ps: float | None = Field(None, description="Worst slack (may be positive)")
     tns_ps: float | None = None
     paths: list[StaPath] = []
@@ -150,6 +151,25 @@ class DrcResult(Envelope):
 class LvsResult(Envelope):
     match: bool | None = None
     mismatches: list[str] = []
+
+
+class CoverageFile(_M):
+    file: str
+    points: int
+    hit: int
+    uncovered: dict[str, list[int]] = Field({}, description="coverage type (line/toggle/...) -> source lines not hit")
+
+
+class CoverageReport(Envelope):
+    points: int = 0
+    hit: int = 0
+    files: list[CoverageFile] = []
+
+
+class TclResult(Envelope):
+    stage: str = ""
+    lines: list[str] = Field([], description="script output (tail if truncated; log_page has everything)")
+    total_lines: int = 0
 
 
 class SnapshotResult(Envelope):
@@ -204,7 +224,8 @@ class ReplayResult(Envelope):
 RESULT_MODELS = {
     "lint_run": LintResult, "synth_run": SynthResult, "sim_run": SimResult, "formal_run": FormalResult,
     "equiv_run": EquivResult, "flow_run_stage": FlowResult, "sta_report_paths": StaResult,
-    "drc_run": DrcResult, "lvs_run": LvsResult, "snapshot_import": SnapshotResult,
+    "drc_run": DrcResult, "lvs_run": LvsResult, "coverage_report": CoverageReport,
+    "tcl_run": TclResult, "snapshot_import": SnapshotResult,
     "snapshot_write": SnapshotResult, "snapshot_branch": SnapshotResult, "snapshot_restore": SnapshotResult,
     "snapshot_diff": DiffResult, "snapshot_read": FileView, "log_page": LogPage, "result_page": ResultPage,
     "replay_run": ReplayResult,
