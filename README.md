@@ -163,6 +163,79 @@ Read this result critically:
   **has not been run**. The spec's success criterion (A1 ≥ A0 on solve rate, ≥30% fewer tokens per solve) is
   therefore still open.
 
+## Task eval: ORFS timing closure (`make eval-timing`, 2026-11-12)
+
+Ten tasks (`evals/orfs_tasks`, frozen by `TASKS.sha256`): gcd, aes, ibex, jpeg and riscv32i on sky130hd and
+asap7. A task is solved when the design is routed with post-route setup WNS >= 0, changing only
+`constraint.sdc`. The policy is **scripted, not an LLM**: run synth through route, read `sta_report_paths`,
+relax the clock if it is violated, try again on a new branch. Flows ran with 4 threads.
+
+| task | solved | flow runs | clock start -> final | post-route WNS (ps) | tool calls (errors) | A0 tokens | A1 tokens | wall (min) | CPU (h) |
+|---|:-:|---:|---|---:|---:|---:|---:|---:|---:|
+| asap7_aes | yes | 1 | 380 -> 380 ps | 23 | 9 (0) | 160,919 | 2,973 | 13.2 | 0.56 |
+| asap7_gcd | yes | 2 | 310 -> 341.883 ps | 5 | 17 (0) | 175,605 | 5,611 | 3.5 | 0.07 |
+| asap7_ibex | yes | 1 | 900 -> 900 ps | 55 | 9 (0) | 292,658 | 2,808 | 23.1 | 0.79 |
+| asap7_jpeg | yes | 2 | 545 -> 586.398 ps | 13 | 17 (0) | 922,063 | 5,449 | 75.2 | 3.18 |
+| asap7_riscv32i | yes | 1 | 950 -> 950 ps | 70 | 9 (0) | 205,836 | 2,639 | 14.7 | 0.56 |
+| sky130hd_aes | yes | 1 | 3.6 -> 3.6 ns | 401 | 9 (0) | 229,724 | 2,981 | 40.1 | 1.84 |
+| sky130hd_gcd | yes | 2 | 1.1 -> 2.404 ns | 172 | 17 (0) | 268,227 | 5,496 | 4.3 | 0.09 |
+| sky130hd_ibex | yes | 1 | 8 -> 8 ns | 567 | 9 (0) | 316,310 | 2,809 | 45.9 | 1.99 |
+| sky130hd_jpeg | yes | 1 | 5 -> 5 ns | 34 | 9 (0) | 511,791 | 2,646 | 31.2 | 1.39 |
+| sky130hd_riscv32i | yes | 1 | 6 -> 6 ns | 385 | 9 (0) | 177,547 | 2,939 | 13.6 | 0.59 |
+
+- Solve rate: 10/10
+- Tokens per solved task: A0 326,068 (counterfactual raw logs) vs A1 3,635 (98.9% fewer)
+- Per solved task: 26.5 min wall, 1.11 CPU-hours
+- Tool-call error rate: 0/114 (0.0%)
+- Determinism (synth + floorplan of each task replayed at 4 threads): 20/20 matched
+
+Read this critically:
+
+- **7 of the 10 designs met timing at the ORFS default clock on the first flow run**, so those tasks only
+  show that the tool loop works on real designs, not that a policy closed anything. Only gcd (both
+  platforms) and asap7 jpeg needed a second run.
+- The policy "solves" by slowing the clock. It does not improve the design, and it does not hold a target.
+- A0 tokens are a counterfactual: the raw logs of the same calls. No A0 agent was run.
+- Solve rate with an LLM (spec M3) is still not measured.
+
+## CVDP task set (`evals/cvdp`)
+
+The spec's first task set is the open-tool agentic subset of CVDP: 92 tasks, pinned in
+`evals/cvdp/manifest.json` by the sha256 of the dataset file. The data is downloaded and verified, not
+redistributed here.
+
+- `cvdp.import_task(engine, task)` turns a task's context into a snapshot.
+- `cvdp.score(engine, design_ref, task, image)` runs the task's own harness (docker compose, cocotb, pytest)
+  on a candidate and reports pass or fail.
+- `make eval-cvdp-baseline` scores every task untouched. Nothing should pass.
+
+What was checked: the pass and fail paths on a synthetic task in CVDP's format (`tests/test_cvdp.py`), and
+three real tasks untouched, which all failed on their test assertions as expected. **The full 92-task
+baseline has not been run**: the development sandbox refused to bulk-execute the dataset's harness code.
+No task has been solved, because that needs a model.
+
+## Replay determinism (`make determinism`, 2026-11-13)
+
+
+| tool | runs replayed | matched |
+|---|---:|---:|
+| `drc_run` | 3 | 3 |
+| `equiv_run` | 4 | 4 |
+| `flow_run_stage` | 6 | 6 |
+| `formal_run` | 8 | 8 |
+| `lint_run` | 4 | 4 |
+| `lvs_run` | 3 | 3 |
+| `sim_run` | 52 | 52 |
+| `sta_report_paths` | 2 | 2 |
+| `synth_run` | 4 | 4 |
+| **total** | **86** | **86** |
+
+Determinism rate: 86/86 = 100.0%.
+
+The spec asks for at least 99% on single-threaded runs. Caveats: 52 of the 86 runs are simulations of one
+small design, and the six ORFS stages are gcd only. In the timing eval, 20 of 20 synth and floorplan stages
+also replayed identically at 4 threads; detailed routing at 4 threads was not replayed.
+
 ## Status against the spec milestones
 
 | | item | state |
@@ -170,7 +243,7 @@ Read this result critically:
 | M0 | lint, synth, sim; snapshot store; replay log; CI on tiny designs | done |
 | M1 | STA, flow stages, ORFS integration, DRC | done; setup and hold paths, PDK DRC and LVS on routed gcd (0 violations, netlists match) |
 | M2 | formal, equiv, LVS; size limiter; log.page | done |
-| M3 | LLM A/B eval with solve rate | not done: only the observation-cost arm exists |
+| M3 | LLM A/B eval with solve rate | not done: needs a model. In place without one: the observation-cost arm, the 10-task timing eval with a scripted policy, the CVDP task adapter and scorer, and the determinism run |
 | G5 | pinned containers | Both images are pinned by digest in `images/images.lock.json`: ORFS, and oss-tools (published to GHCR by the `publish-image` workflow). `EDAPORT_RUNNER=docker` runs every tool in them. The dev default is still the host binaries (`EDAPORT_RUNNER=local`). |
 
 Known gaps:

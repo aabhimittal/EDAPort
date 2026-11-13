@@ -1,6 +1,6 @@
 PY ?= python3
 
-.PHONY: install test test-fast demo demo-orfs agent-demo agent-demo-orfs eval-ab eval-timing orfs-image serve
+.PHONY: install test test-fast demo demo-orfs agent-demo agent-demo-orfs eval-ab eval-timing eval-cvdp-baseline determinism orfs-image serve
 
 install:
 	$(PY) -m pip install -e ".[test]"
@@ -28,6 +28,12 @@ eval-ab:         ## A/B observation-cost eval + determinism rate -> evals/ab_int
 
 eval-timing:     ## 10 ORFS timing-closure tasks, scripted policy (hours; resumes from timing_results.json)
 	$(PY) evals/ab_interface/timing_tasks.py
+
+eval-cvdp-baseline: ## score all 92 CVDP tasks untouched (runs the dataset's harness code in containers)
+	$(PY) evals/cvdp/run.py
+
+determinism:     ## replay ~80 single-threaded runs (+ ORFS stages) and report the match rate
+	$(PY) evals/determinism.py --orfs
 
 orfs-image:      ## pull the digest-pinned ORFS image
 	docker pull $$($(PY) -c "import json;print(json.load(open('images/images.lock.json'))['orfs']['image'])")
