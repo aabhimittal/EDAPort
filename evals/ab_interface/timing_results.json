@@ -169,5 +169,24 @@
   "replays": 2,
   "replays_matched": 2,
   "threads": 4
+ },
+ {
+  "task": "asap7_jpeg",
+  "solved": true,
+  "flows": 2,
+  "error": null,
+  "period_start": 545.0,
+  "period_final": 586.398,
+  "wns_ps": 13.2,
+  "time_unit": "1ps",
+  "calls": 17,
+  "tool_errors": 0,
+  "a1_tokens": 5449,
+  "a0_tokens": 922063,
+  "wall_s": 4512.4,
+  "cpu_s": 11445.7,
+  "replays": 2,
+  "replays_matched": 2,
+  "threads": 4
  }
 ]

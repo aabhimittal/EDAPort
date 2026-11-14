@@ -3,3 +3,5 @@ __pycache__/
 .edaport/
 .pytest_cache/
 .edaport-eval/
+evals/cvdp/.cache/
+.edaport-llm-eval/

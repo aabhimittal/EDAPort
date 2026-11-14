@@ -1,0 +1,470 @@
+{
+ "dataset": "nvidia/cvdp-benchmark-dataset (Hugging Face)",
+ "version": "1.1.0",
+ "file": "cvdp_v1.1.0_agentic_code_generation_no_commercial.jsonl",
+ "url": "https://huggingface.co/datasets/nvidia/cvdp-benchmark-dataset/resolve/main/cvdp_v1.1.0_agentic_code_generation_no_commercial.jsonl",
+ "sha256": "2007f4311ed731a985a4ed9187479ad2cfc2462bc4013eba0d72a9f35642fdcf",
+ "license": "see LICENSE and NOTICE in the dataset repository; the data is fetched, not redistributed here",
+ "tasks": [
+  {
+   "id": "cvdp_agentic_64b66b_codec_0001",
+   "category": "cid005",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_AES_encryption_decryption_0003",
+   "category": "cid016",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_AES_encryption_decryption_0005",
+   "category": "cid016",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_AES_encryption_decryption_0009",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_AES_encryption_decryption_0012",
+   "category": "cid004",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_AES_encryption_decryption_0018",
+   "category": "cid005",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_DES_0001",
+   "category": "cid003",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_DES_0003",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_DES_0005",
+   "category": "cid005",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_DES_0007",
+   "category": "cid005",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_Min_Hamming_Distance_Finder_0001",
+   "category": "cid005",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_PCIe_endpoint_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_arithmetic_progression_generator_0001",
+   "category": "cid016",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_async_fifo_compute_ram_application_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_async_fifo_compute_ram_application_0006",
+   "category": "cid005",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_async_filo_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_axi4lite_to_pcie_config_0003",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_axis_broadcaster_0001",
+   "category": "cid016",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_axis_to_uart_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_axis_to_uart_0004",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_barrel_shifter_0001",
+   "category": "cid016",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_barrel_shifter_0002",
+   "category": "cid004",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_bcd_adder_0004",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_binary_search_tree_algorithms_0001",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_binary_search_tree_algorithms_0014",
+   "category": "cid005",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_binary_to_gray_0003",
+   "category": "cid003",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_byte_enable_ram_0002",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_cache_controller_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_caesar_cipher_0001",
+   "category": "cid016",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_cellular_automata_0002",
+   "category": "cid003",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_cic_decimator_0001",
+   "category": "cid003",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_cipher_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_cont_adder_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_csr_using_apb_interface_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_custom_fifo_0004",
+   "category": "cid016",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_digital_stopwatch_0001",
+   "category": "cid005",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_direct_map_cache_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_direct_map_cache_0003",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_dma_xfer_engine_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_door_lock_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_dual_port_memory_0001",
+   "category": "cid016",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_dual_port_memory_0004",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_dynamic_equalizer_0001",
+   "category": "cid003",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_dynamic_equalizer_0004",
+   "category": "cid004",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_dynamic_equalizer_0008",
+   "category": "cid005",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_elevator_control_0004",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_ethernet_mii_0004",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_ethernet_mii_0006",
+   "category": "cid003",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_event_scheduler_0001",
+   "category": "cid003",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_event_scheduler_0004",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_event_storing_0001",
+   "category": "cid005",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_fixed_arbiter_0010",
+   "category": "cid004",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_gcd_0007",
+   "category": "cid005",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_hdbn_codec_0001",
+   "category": "cid005",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_jpeg_runlength_enc_0001",
+   "category": "cid005",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_lfsr_0001",
+   "category": "cid016",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_lfsr_0005",
+   "category": "cid016",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_low_power_channel_0001",
+   "category": "cid005",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_monte_carlo_0006",
+   "category": "cid016",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_multiplexer_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_nbit_swizzling_0001",
+   "category": "cid003",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_nmea_gps_0008",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_phase_rotation_0010",
+   "category": "cid005",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_phase_rotation_0013",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_phase_rotation_0015",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_phase_rotation_0019",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_phase_rotation_0028",
+   "category": "cid005",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_phase_rotation_0031",
+   "category": "cid004",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_phase_rotation_0038",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_poly_decimator_0001",
+   "category": "cid005",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_prbs_0001",
+   "category": "cid005",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_programmable_fsm_dynamic_state_encoding_0001",
+   "category": "cid004",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_queue_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_rc5_0001",
+   "category": "cid003",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_rgb_color_space_conversion_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_rgb_color_space_conversion_0004",
+   "category": "cid004",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_secure_apb_history_shift_register_0001",
+   "category": "cid004",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_sigma_delta_audio_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_signed_comparator_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_sorter_0009",
+   "category": "cid004",
+   "difficulty": "easy"
+  },
+  {
+   "id": "cvdp_agentic_sorter_0016",
+   "category": "cid005",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_sorter_0026",
+   "category": "cid005",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_spi_complex_mult_0002",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_swizzler_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_swizzler_0005",
+   "category": "cid005",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_sync_serial_communication_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_systolic_array_0001",
+   "category": "cid005",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_thermostat_secure_0001",
+   "category": "cid004",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_traffic_light_controller_0001",
+   "category": "cid004",
+   "difficulty": "hard"
+  },
+  {
+   "id": "cvdp_agentic_ttc_lite_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_universal_shift_reg_0001",
+   "category": "cid003",
+   "difficulty": "medium"
+  },
+  {
+   "id": "cvdp_agentic_universal_shift_reg_0003",
+   "category": "cid004",
+   "difficulty": "medium"
+  }
+ ]
+}
