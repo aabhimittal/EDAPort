@@ -236,6 +236,28 @@ The spec asks for at least 99% on single-threaded runs. Caveats: 52 of the 86 ru
 small design, and the six ORFS stages are gcd only. In the timing eval, 20 of 20 synth and floorplan stages
 also replayed identically at 4 threads; detailed routing at 4 threads was not replayed.
 
+## LLM A/B harness (`evals/ab_interface/llm_agent.py`), ready but not run
+
+The spec's M3 eval: same model and task prompt in both arms, only the tool interface differs.
+
+- **A0:** one `shell` tool, bash in the pinned oss-tools container with the design mounted and no network.
+- **A1:** the EDAPort tools. The agent leaves its answer on branch `solution`.
+- **Tasks:** `--suite counter` (repair the example counter; hidden check = unseen sim seeds plus the formal
+  proof) or `--suite cvdp` (the 92 CVDP tasks, scored by their own harnesses).
+- **Metrics:** solve rate, tokens per solved task, tool-call error rate, wall time per solve.
+
+```bash
+pip install -e ".[eval]"     # adds the anthropic SDK; credentials come from the environment
+python evals/ab_interface/llm_agent.py --dry-run                       # no API calls
+python evals/ab_interface/llm_agent.py --suite counter --arms A0,A1    # default model claude-opus-5-5
+python evals/ab_interface/llm_agent.py --suite cvdp --limit 10
+```
+
+**It has not been run against a real model.** The loop, both arms, the task check and the accounting are
+tested with a scripted stand-in model (`tests/test_llm_agent.py`), so request shapes sent to the API are
+unverified. Requests opt in to server-side refusal fallbacks (`fallbacks: "default"`). The ORFS timing
+tasks are not wired into this harness yet: A0 would need a shell in the ORFS image.
+
 ## Status against the spec milestones
 
 | | item | state |
@@ -243,7 +265,7 @@ also replayed identically at 4 threads; detailed routing at 4 threads was not re
 | M0 | lint, synth, sim; snapshot store; replay log; CI on tiny designs | done |
 | M1 | STA, flow stages, ORFS integration, DRC | done; setup and hold paths, PDK DRC and LVS on routed gcd (0 violations, netlists match) |
 | M2 | formal, equiv, LVS; size limiter; log.page | done |
-| M3 | LLM A/B eval with solve rate | not done: needs a model. In place without one: the observation-cost arm, the 10-task timing eval with a scripted policy, the CVDP task adapter and scorer, and the determinism run |
+| M3 | LLM A/B eval with solve rate | harness built and stub-tested, **not run**: it needs API credentials. Also in place: the observation-cost arm, the 10-task timing eval with a scripted policy, the CVDP task adapter and scorer, and the determinism run |
 | G5 | pinned containers | Both images are pinned by digest in `images/images.lock.json`: ORFS, and oss-tools (published to GHCR by the `publish-image` workflow). `EDAPORT_RUNNER=docker` runs every tool in them. The dev default is still the host binaries (`EDAPORT_RUNNER=local`). |
 
 Known gaps:
