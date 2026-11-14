@@ -117,14 +117,19 @@ def run_a1(client, model, effort, task: Task, engine: Engine, res: Result) -> st
     engine.store.branch(start, "main")
     engine.store.branch(start, SOLUTION)
 
+    tools = edaport_tools(engine)
+    allowed = {t["name"] for t in tools}
+
     def execute(name: str, args: dict) -> tuple[str, bool]:
+        if name not in allowed:  # enforce the listing: a hidden tool must not be callable by name
+            return f"invalid call: unknown tool {name}", True
         try:
             out = engine.call(name, **args)
-        except (TypeError, ValueError) as e:  # unknown tool or wrong argument names
+        except TypeError as e:  # wrong argument names
             return f"invalid call: {e}", True
         return json.dumps(out), not out["ok"]
 
-    run_agent(client, model, effort, SYSTEM["A1"], task.prompt, edaport_tools(engine), execute, res)
+    run_agent(client, model, effort, SYSTEM["A1"], task.prompt, tools, execute, res)
     return engine.store.resolve(SOLUTION)
 
 

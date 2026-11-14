@@ -52,12 +52,15 @@ def test_a1_scripted_repair_is_solved_and_accounted(tmp_path, monkeypatch):
         [("snapshot_read", {"design_ref": "main", "path": "rtl/counter.v"})],
         write_fix,
         [("sim_run", {"design_ref": "solution", "tb_ref": "tb/tb_counter.sv"}), ("no_such_tool", {})],  # parallel calls
+        [("snapshot_import", {"path": str(ROOT / "examples/physical"), "label": "solution"})],  # hidden tool, by name
         [],
     ])
     (res,) = la.run(stub, [la.counter_repair()], ["A1"], "stub-model", "medium", str(tmp_path), image="unused")
-    assert res.solved and res.stop == "end_turn" and res.turns == 4
-    assert res.tool_calls == 4 and res.tool_errors == 1  # the unknown tool is an error result, not a crash
-    assert res.input_tokens == 4 * 105 and res.output_tokens == 40
+    # solved proves the hidden snapshot_import did not run: it would have moved `solution` to another design
+    assert res.solved and res.stop == "end_turn" and res.turns == 5
+    assert res.tool_calls == 5 and res.tool_errors == 2  # unknown and hidden tools are error results, not crashes
+    assert res.input_tokens == 5 * 105 and res.output_tokens == 50
+    assert "unknown tool snapshot_import" in stub.requests[4]["messages"][8]["content"][0]["content"]
     req = stub.requests[2]
     assert req["fallbacks"] == "default" and req["output_config"] == {"effort": "medium"}
     names = {t["name"] for t in req["tools"]}
