@@ -150,7 +150,8 @@ def run_a0(client, model, effort, task: Task, engine: Engine, res: Result, image
             if name != "shell" or not isinstance(args.get("command"), str):
                 return "invalid call: the only tool is shell(command)", True
             try:
-                p = subprocess.run(["docker", "run", "--rm", "--network=none", "-v", f"{work}:/work", "-w", "/work",
+                p = subprocess.run(["docker", "run", "--rm", "--network=none", "--user", f"{os.getuid()}:{os.getgid()}",
+                                    "-e", "HOME=/tmp", "-v", f"{work}:/work", "-w", "/work",
                                     image, "bash", "-c", args["command"]],
                                    capture_output=True, text=True, timeout=timeout_s, errors="replace")
             except subprocess.TimeoutExpired:

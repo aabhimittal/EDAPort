@@ -73,7 +73,9 @@ def score(engine, design_ref: str, task: dict, image: str, timeout_s: float = 90
                 return {**result, "passed": False, "detail": "harness image build failed: " + _tail(b.stderr)}
         for svc in services:
             try:
-                r = subprocess.run(compose + ["run", "--rm", "-v", f"{code}:/code", "-v", f"{code}/rundir:/rundir", svc],
+                # as the calling uid: root-owned files in the mounted dir could not be cleaned up afterwards
+                r = subprocess.run(compose + ["run", "--rm", "--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp",
+                                              "-v", f"{code}:/code", "-v", f"{code}/rundir:/rundir", svc],
                                    capture_output=True, text=True, timeout=timeout_s)
                 rc, log = r.returncode, r.stdout + r.stderr
             except subprocess.TimeoutExpired:
