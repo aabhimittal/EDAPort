@@ -62,3 +62,21 @@ def test_signoff_hold_fanout_and_tcl(engine, monkeypatch):
     monkeypatch.setenv("EDAPORT_ALLOW_TCL", "1")
     tcl = engine.call("tcl_run", design_ref=ref, script='puts "cells [llength [get_cells *]]"', threads=4)
     assert tcl["ok"] and tcl["lines"][0].startswith("cells ") and int(tcl["lines"][0].split()[1]) > 100
+
+
+def test_sta_corner_selects_one_corner(engine):
+    """gcd on ihp-sg13g2 with CORNERS = slow fast: paths and WNS must follow the corner asked for."""
+    ref = engine.call("snapshot_import", path=str(ROOT / "tests/fixtures/orfs_corners"))["design_ref"]
+    for stage in ("synth", "floorplan"):
+        r = engine.call("flow_run_stage", design_ref=ref, stage=stage, threads=4)
+        assert r["ok"], r["error"]
+        ref = r["design_ref"]
+    slow = engine.call("sta_report_paths", design_ref=ref, k=1, corner="slow", threads=4)
+    fast = engine.call("sta_report_paths", design_ref=ref, k=1, corner="fast", threads=4)
+    both = engine.call("sta_report_paths", design_ref=ref, k=1, threads=4)
+    assert slow["ok"] and fast["ok"] and slow["corner"] == "slow"
+    assert fast["wns_ps"] > slow["wns_ps"]  # the fast corner has more slack
+    assert fast["wns_ps"] == min(p["slack_ps"] for p in fast["paths"]) and fast["tns_ps"] is None
+    assert both["wns_ps"] == pytest.approx(slow["wns_ps"], abs=10) and both["tns_ps"] is not None  # worst over corners
+    bad = engine.call("sta_report_paths", design_ref=ref, corner="nope", threads=4)
+    assert not bad["ok"] and bad["error"]["kind"] == "tool_failed"

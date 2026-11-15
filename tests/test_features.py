@@ -109,3 +109,15 @@ def test_cli_replay_all(engine, counter, capsys):
     engine.call("lint_run", design_ref="main", tool="iverilog")
     assert cli(["--home", str(engine.home), "replay", "--all"]) == 0
     assert "determinism: 2/2 replays matched" in capsys.readouterr().out
+
+
+def test_replay_log_lookup_by_offset(tmp_path):
+    from edaport.replay.log import ReplayLog
+    log = ReplayLog(tmp_path / "runs.jsonl")
+    ids = [log.append({"tool": "t", "n": i}) for i in range(1, 6)]
+    assert [log.get(i)["n"] for i in reversed(ids)] == [5, 4, 3, 2, 1]
+    assert log.append({"tool": "t", "n": 6}) == "r-0006" and log.get("r-0006")["n"] == 6  # index grows with the log
+    assert ReplayLog(tmp_path / "runs.jsonl").get("r-0003")["n"] == 3  # a fresh reader builds its own index
+    for bad in ("r-0000", "r-0007", "r-9999", "nope", ""):
+        with pytest.raises(KeyError):
+            log.get(bad)

@@ -10,11 +10,13 @@ lists the tasks and tool surfaces. The loop itself is tested with a scripted sta
 
     python evals/ab_interface/llm_agent.py --arms A0,A1 --tasks counter_repair [--model ...] [--effort ...]
     python evals/ab_interface/llm_agent.py --suite cvdp --limit 10
+    python evals/ab_interface/llm_agent.py --suite timing --limit 2      # ORFS timing closure (docker, slow)
 """
 
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -36,9 +38,9 @@ MODEL = "claude-opus-5-5"
 SOLUTION = "solution"  # A1: the branch the agent must leave its final design on
 SHELL_OUTPUT_CAP = 200_000  # chars; a larger dump would not fit the context anyway, and the cut is stated
 SYSTEM = {
-    "A0": ("You are an RTL engineer. The design is in /work inside a container with yosys, iverilog, verilator, "
-           "sby and cocotb. Use the `shell` tool to inspect, edit and test it. Your final answer is the state of "
-           "the files in /work when you stop. Stop when the task is done."),
+    "A0": ("You are an RTL engineer. The design is in /work inside a container. Use the `shell` tool to inspect, "
+           "edit and test it. Your final answer is the state of the files in /work when you stop. Stop when the "
+           "task is done. "),
     "A1": ("You are an RTL engineer. Work through the EDAPort tools: the design is the snapshot on branch `main`. "
            "Read files with snapshot_read, change them with snapshot_write, check with the lint/sim/formal/synth "
            f"tools. Your final answer is whatever branch `{SOLUTION}` points at when you stop: pass "
@@ -52,6 +54,9 @@ class Task:
     prompt: str
     setup: Callable[[Engine], str]          # -> design_ref of the starting design
     check: Callable[[Engine, str], bool]    # design_ref of the candidate -> solved?
+    a0_note: str = "The container has yosys, iverilog, verilator, sby and cocotb."  # what the A0 shell offers
+    a0_image: str | None = None             # A0 container image (default: the oss-tools image)
+    shell_timeout_s: float = 600
 
 
 @dataclass
@@ -140,8 +145,7 @@ SHELL_TOOL = {"name": "shell", "description": "Run a bash command in /work (the 
                                "required": ["command"], "additionalProperties": False}}
 
 
-def run_a0(client, model, effort, task: Task, engine: Engine, res: Result, image: str,
-           timeout_s: float = 600) -> str | None:
+def run_a0(client, model, effort, task: Task, engine: Engine, res: Result, image: str) -> str | None:
     work = Path(tempfile.mkdtemp(prefix="edaport-a0-"))
     try:
         engine.store.materialize(task.setup(engine), work)
@@ -152,16 +156,16 @@ def run_a0(client, model, effort, task: Task, engine: Engine, res: Result, image
             try:
                 p = subprocess.run(["docker", "run", "--rm", "--network=none", "--user", f"{os.getuid()}:{os.getgid()}",
                                     "-e", "HOME=/tmp", "-v", f"{work}:/work", "-w", "/work",
-                                    image, "bash", "-c", args["command"]],
-                                   capture_output=True, text=True, timeout=timeout_s, errors="replace")
+                                    task.a0_image or image, "bash", "-c", args["command"]],
+                                   capture_output=True, text=True, timeout=task.shell_timeout_s, errors="replace")
             except subprocess.TimeoutExpired:
-                return f"timed out after {timeout_s}s", True
+                return f"timed out after {task.shell_timeout_s}s", True
             out = p.stdout + p.stderr
             if len(out) > SHELL_OUTPUT_CAP:
                 out = out[:SHELL_OUTPUT_CAP] + f"\n[output cut at {SHELL_OUTPUT_CAP} of {len(out)} chars]"
             return f"{out}\n[exit code {p.returncode}]", p.returncode != 0
 
-        run_agent(client, model, effort, SYSTEM["A0"], task.prompt, [SHELL_TOOL], execute, res)
+        run_agent(client, model, effort, SYSTEM["A0"] + task.a0_note, task.prompt, [SHELL_TOOL], execute, res)
         return engine.store.import_dir(work)
     finally:
         shutil.rmtree(work, ignore_errors=True)
@@ -191,6 +195,48 @@ def cvdp_tasks(limit: int | None) -> list[Task]:
     for tid, t in sorted(cvdp.load().items())[:limit]:
         out.append(Task(tid, t["prompt"].replace("/code/", ""), lambda e, t=t: cvdp.import_task(e, t),
                         lambda e, ref, t=t: cvdp.score(e, ref, t, image)["passed"]))
+    return out
+
+
+ORFS_MAKE = ("source /OpenROAD-flow-scripts/env.sh && make -C /OpenROAD-flow-scripts/flow "
+             "DESIGN_CONFIG=/work/config.mk WORK_HOME=/work/orfs DESIGN_DIR=/work NUM_CORES=4")
+
+
+def timing_check(e: Engine, ref: str, start: str, limit: float) -> bool:
+    """Solved = routed, timed against a clock no slower than `limit`, setup WNS >= 0, only constraints changed."""
+    files, base = e.store.manifest(ref)["files"], e.store.manifest(start)["files"]
+    routed_sdc = [p for p in files if p.startswith("orfs/results/") and p.endswith("/5_route.sdc")]
+    if files.get("config.mk") != base["config.mk"] or not routed_sdc:
+        return False
+    # The SDC ORFS wrote next to the routed design is what it was actually timed against (not an edit made after).
+    periods = [float(x) for x in re.findall(r"-period\s+([0-9.]+)", e.store.read_file(ref, routed_sdc[0]).decode())]
+    if not periods or max(periods) > limit:
+        return False
+    sta = e.call("sta_report_paths", design_ref=ref, stage="route", k=1, threads=4)
+    return sta["ok"] and sta["wns_ps"] is not None and sta["wns_ps"] >= 0
+
+
+def timing_tasks(limit: int | None) -> list[Task]:
+    """The 10 ORFS tasks. Target clock = 1.25x the period the scripted policy closed at (timing_results.json)."""
+    scripted = {r["task"]: r for r in json.loads((ROOT / "evals/ab_interface/timing_results.json").read_text())}
+    out = []
+    for name, r in sorted(scripted.items())[:limit]:
+        target, unit = round(r["period_final"] * 1.25, 3), r["time_unit"][1:]
+        prompt = (f"Close timing on this design. It must be routed by OpenROAD-flow-scripts with post-route setup "
+                  f"WNS >= 0 at a clock period of at most {target} {unit}. Change only `set clk_period` in "
+                  f"constraint.sdc (currently {r['period_start']:g} {unit}); do not edit config.mk.")
+        out.append(Task(
+            f"timing_{name}",
+            prompt + " Use flow_run_stage (synth, floorplan, place, cts, grt, route; threads=4) and "
+                     "sta_report_paths. Each stage returns a new design_ref: chain them, and leave the routed "
+                     f"design on branch `{SOLUTION}`.",
+            lambda e, name=name: e.store.import_dir(ROOT / "evals/orfs_tasks" / name),
+            lambda e, ref, name=name, target=target: timing_check(
+                e, ref, e.store.import_dir(ROOT / "evals/orfs_tasks" / name), target),
+            a0_note=(f"The container is the OpenROAD-flow-scripts image. Run flow stages with: `{ORFS_MAKE} "
+                     "<synth|floorplan|place|cts|grt|route>`; results, logs and reports land in /work/orfs. "
+                     "Leave the routed results in /work/orfs."),
+            a0_image=load_lock()["orfs"]["image"], shell_timeout_s=7200))
     return out
 
 
@@ -229,7 +275,7 @@ def table(results: list[Result]) -> str:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--arms", default="A0,A1")
-    ap.add_argument("--suite", choices=["counter", "cvdp"], default="counter")
+    ap.add_argument("--suite", choices=["counter", "cvdp", "timing"], default="counter")
     ap.add_argument("--limit", type=int, help="first N tasks of the suite")
     ap.add_argument("--model", default=MODEL)
     ap.add_argument("--effort", default="medium")
@@ -238,7 +284,7 @@ def main():
     ap.add_argument("--out", default=str(ROOT / "evals/ab_interface/llm_results.md"))
     ap.add_argument("--dry-run", action="store_true", help="no API calls: list tasks and tool surfaces")
     a = ap.parse_args()
-    tasks = [counter_repair()] if a.suite == "counter" else cvdp_tasks(a.limit)
+    tasks = {"counter": lambda n: [counter_repair()], "cvdp": cvdp_tasks, "timing": timing_tasks}[a.suite](a.limit)
     if a.dry_run:
         names = [t["name"] for t in edaport_tools(Engine(tempfile.mkdtemp(prefix="edaport-dry-")))]
         print(f"{len(tasks)} tasks: {[t.id for t in tasks][:5]}...\nA0 tools: ['shell']\nA1 tools ({len(names)}): {names}")
