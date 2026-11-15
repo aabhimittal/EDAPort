@@ -474,7 +474,12 @@ class Engine:
             if run.rc != 0 or "EDAPORT_WNS" not in run.log:
                 errs = _ORFS_ERROR.findall(run.log)
                 raise ToolFail("tool_failed", errs[0] if errs else f"sta rc={run.rc}")
-            ctx.payload.update(opensta_json.parse(run.log))
+            parsed = opensta_json.parse(run.log)
+            if corner:
+                # OpenSTA's worst-slack commands span all corners; within one corner the worst path is the answer.
+                parsed["wns_ps"] = min((p["slack_ps"] for p in parsed["paths"]), default=None)
+                parsed["tns_ps"] = None
+            ctx.payload.update(parsed)
 
         return self._execute("sta_report_paths", args, design_ref, {"stage": stage or "latest", "corner": corner,
                                                                          "path_delay": path_delay}, body, budget)

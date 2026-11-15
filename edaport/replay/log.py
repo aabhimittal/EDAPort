@@ -3,6 +3,7 @@
 import fcntl
 import json
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -12,6 +13,7 @@ class ReplayLog:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.touch(exist_ok=True)
+        self._offsets = [0]  # byte offset where line i+1 starts; the log is append-only, so these never move
 
     def append(self, record: dict) -> str:
         """Assign the next run_id under an exclusive lock and append. Returns the run_id."""
@@ -30,7 +32,16 @@ class ReplayLog:
             return [json.loads(line) for line in f if line.strip()]
 
     def get(self, run_id: str) -> dict:
-        for rec in self.records():
-            if rec["run_id"] == run_id:
-                return rec
+        """Run ids are line numbers (r-0007 = line 7), so a lookup seeks instead of parsing the whole log."""
+        m = re.fullmatch(r"r-(\d+)", run_id)
+        n = int(m.group(1)) if m else 0
+        with open(self.path, "rb") as f:
+            f.seek(self._offsets[-1])
+            while len(self._offsets) <= n and f.readline().endswith(b"\n"):  # index complete lines only
+                self._offsets.append(f.tell())
+            if 1 <= n < len(self._offsets):
+                f.seek(self._offsets[n - 1])
+                rec = json.loads(f.readline())
+                if rec["run_id"] == run_id:
+                    return rec
         raise KeyError(f"unknown run_id {run_id!r}")

@@ -130,8 +130,8 @@ class StaResult(Envelope):
     stage: str = ""
     corner: str | None = None
     path_delay: str = Field("max", description="max = setup paths, min = hold paths")
-    wns_ps: float | None = Field(None, description="Worst slack (may be positive)")
-    tns_ps: float | None = None
+    wns_ps: float | None = Field(None, description="Worst slack (may be positive); for one corner when corner is set")
+    tns_ps: float | None = Field(None, description="Total negative slack; null when corner is set")
     paths: list[StaPath] = []
 
 

@@ -243,7 +243,10 @@ The spec's M3 eval: same model and task prompt in both arms, only the tool inter
 - **A0:** one `shell` tool, bash in the pinned oss-tools container with the design mounted and no network.
 - **A1:** the EDAPort tools. The agent leaves its answer on branch `solution`.
 - **Tasks:** `--suite counter` (repair the example counter; hidden check = unseen sim seeds plus the formal
-  proof) or `--suite cvdp` (the 92 CVDP tasks, scored by their own harnesses).
+  proof), `--suite cvdp` (the 92 CVDP tasks, scored by their own harnesses) or `--suite timing` (the 10 ORFS
+  timing tasks; target clock = 1.25x the period the scripted policy closed at; A0 gets a shell in the ORFS
+  image). The timing check reads the clock the design was actually routed at, so editing the SDC afterwards
+  does not count.
 - **Metrics:** solve rate, tokens per solved task, tool-call error rate, wall time per solve.
 
 ```bash
@@ -255,8 +258,8 @@ python evals/ab_interface/llm_agent.py --suite cvdp --limit 10
 
 **It has not been run against a real model.** The loop, both arms, the task check and the accounting are
 tested with a scripted stand-in model (`tests/test_llm_agent.py`), so request shapes sent to the API are
-unverified. Requests opt in to server-side refusal fallbacks (`fallbacks: "default"`). The ORFS timing
-tasks are not wired into this harness yet: A0 would need a shell in the ORFS image.
+unverified. Requests opt in to server-side refusal fallbacks (`fallbacks: "default"`). For the timing
+suite, both arms were driven by the stand-in model through a real ORFS run of gcd on sky130hd.
 
 ## Status against the spec milestones
 
@@ -272,7 +275,7 @@ Known gaps:
 
 - **eqy** is not used: `equiv_run` runs Yosys's `equiv_*` passes. Building eqy was blocked in the development sandbox.
 - **S3** is a push/pull remote (`edaport push|pull REF s3://bucket/prefix`), not a live store backend. It is tested against a mock S3 (moto), not real AWS.
-- **`corner`** is passed to OpenSTA but untested: the designs tried have a single corner.
+- **`corner`**: tested on one two-corner design (gcd on ihp-sg13g2, slow and fast) at the floorplan stage. With a corner set, `wns_ps` is the worst path of that corner and `tns_ps` is null: OpenSTA's totals span all corners.
 - STA keeps the delay precision of OpenSTA's JSON (about 10 ps). Fanout is dumped per net and can be null where net names differ.
 - `output_ref` of ORFS stages is not deterministic, because ORFS logs contain runtimes. Replay compares the
   typed result digest, which leaves out runtime and memory metrics.
@@ -280,4 +283,4 @@ Known gaps:
 - ORFS images run as the calling uid with `HOME=/tmp`. Container CPU and memory caps are opt-in
   (`EDAPORT_DOCKER_CPUS`, `EDAPORT_DOCKER_MEM_MB`).
 - Snapshot eviction is manual: `edaport gc [--keep-runs N]`.
-- Replay-log lookup is a linear scan.
+- `edaport runs` and `gc` still read the whole replay log; single-run lookups seek by line.
