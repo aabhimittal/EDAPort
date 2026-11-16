@@ -1,0 +1,9 @@
+EDAPort
+Copyright 2026 Abhishek Mittal
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Third-party material that is fetched or referenced, not relicensed here:
+- examples/gcd_sky130hd/src/gcd.v and constraint.sdc, and evals/orfs_tasks/*/constraint.sdc, come from
+  OpenROAD-flow-scripts and keep that project's licensing.
+- The CVDP dataset (evals/cvdp) is downloaded at run time under its own LICENSE and NOTICE.

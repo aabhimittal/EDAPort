@@ -284,3 +284,19 @@ Known gaps:
   (`EDAPORT_DOCKER_CPUS`, `EDAPORT_DOCKER_MEM_MB`).
 - Snapshot eviction is manual: `edaport gc [--keep-runs N]`.
 - `edaport runs` and `gc` still read the whole replay log; single-run lookups seek by line.
+
+## Running the evals on GitHub
+
+Two workflows run only when started by hand (Actions tab, "Run workflow"):
+
+- **`eval-cvdp-baseline`**: scores all 92 CVDP tasks untouched. It downloads the dataset and executes its
+  harness code in containers on the runner. Results appear in the job summary.
+- **`eval-llm`**: the M3 A/B eval. Add the repository secret `ANTHROPIC_API_KEY` first
+  (Settings, Secrets and variables, Actions). **It spends money on the Anthropic API**; start with the
+  `counter` suite. Results appear in the job summary.
+
+Neither workflow has been run yet.
+
+## License
+
+Apache-2.0. See `LICENSE` and `NOTICE` (third-party design sources and the CVDP dataset keep their own terms).

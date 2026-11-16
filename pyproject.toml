@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Typed, size-bounded, replayable MCP tools for open-source EDA"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }  # matches LICENSE; spec draft says Apache-2.0, owner to decide
+license = { text = "Apache-2.0" }
 dependencies = ["mcp>=2.3", "pydantic>=2.7"]
 
 [project.optional-dependencies]
