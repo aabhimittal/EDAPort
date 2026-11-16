@@ -1,0 +1,32 @@
+name: eval-cvdp-baseline
+# Manual only. Scores all 92 CVDP tasks untouched with each task's own harness (expected: 0 pass).
+# It downloads the dataset from Hugging Face and executes its harness code in containers on this runner.
+on:
+  workflow_dispatch:
+    inputs:
+      tasks:
+        description: "Comma-separated task ids (empty = all 92)"
+        required: false
+        default: ""
+jobs:
+  baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with: { python-version: "3.12" }
+      - run: pip install -e .
+      - name: Run baseline
+        env:
+          TASKS: ${{ inputs.tasks }}
+        run: |
+          if [ -n "$TASKS" ]; then python evals/cvdp/run.py --tasks "$TASKS"; else python evals/cvdp/run.py; fi
+      - name: Results to job summary
+        if: always()
+        run: |
+          cat evals/cvdp/baseline_results.md >> "$GITHUB_STEP_SUMMARY" || true
+          echo '<details><summary>baseline_results.json</summary>' >> "$GITHUB_STEP_SUMMARY"
+          echo >> "$GITHUB_STEP_SUMMARY"; echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat evals/cvdp/baseline_results.json >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"; echo '</details>' >> "$GITHUB_STEP_SUMMARY"

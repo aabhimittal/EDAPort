@@ -1,0 +1,54 @@
+name: eval-llm
+# Manual only. The spec's M3 eval: same model and prompt, A0 (raw shell) vs A1 (EDAPort tools).
+# Needs the repository secret ANTHROPIC_API_KEY and SPENDS MONEY on the Anthropic API.
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "Task suite"
+        type: choice
+        options: [counter, cvdp, timing]
+        default: counter
+      limit:
+        description: "First N tasks of the suite (empty = all)"
+        required: false
+        default: ""
+      arms:
+        description: "Arms to run"
+        default: "A0,A1"
+      model:
+        description: "Model id"
+        default: "claude-opus-5-5"
+      effort:
+        description: "Effort"
+        type: choice
+        options: [low, medium, high, xhigh, max]
+        default: medium
+jobs:
+  eval:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with: { python-version: "3.12" }
+      - run: pip install -e ".[eval]"
+      - name: Run eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EDAPORT_RUNNER: docker   # every tool, and the task checks, run in the pinned images
+          SUITE: ${{ inputs.suite }}
+          LIMIT: ${{ inputs.limit }}
+          ARMS: ${{ inputs.arms }}
+          MODEL: ${{ inputs.model }}
+          EFFORT: ${{ inputs.effort }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then echo "Set the repository secret ANTHROPIC_API_KEY first."; exit 1; fi
+          python evals/ab_interface/llm_agent.py --suite "$SUITE" --arms "$ARMS" --model "$MODEL" --effort "$EFFORT" ${LIMIT:+--limit "$LIMIT"}
+      - name: Results to job summary
+        if: always()
+        run: |
+          cat evals/ab_interface/llm_results.md >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat evals/ab_interface/llm_results.json >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
